@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -32,6 +34,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    /**
+     * @var Collection<int, OrdreFabrication>
+     */
+    #[ORM\OneToMany(targetEntity: OrdreFabrication::class, mappedBy: 'user')]
+    private Collection $ordreFabrications;
+
+    public function __construct()
+    {
+        $this->ordreFabrications = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -106,5 +119,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
         
         return $data;
+    }
+
+    /**
+     * @return Collection<int, OrdreFabrication>
+     */
+    public function getOrdreFabrications(): Collection
+    {
+        return $this->ordreFabrications;
+    }
+
+    public function addOrdreFabrication(OrdreFabrication $ordreFabrication): static
+    {
+        if (!$this->ordreFabrications->contains($ordreFabrication)) {
+            $this->ordreFabrications->add($ordreFabrication);
+            $ordreFabrication->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrdreFabrication(OrdreFabrication $ordreFabrication): static
+    {
+        if ($this->ordreFabrications->removeElement($ordreFabrication)) {
+            // set the owning side to null (unless already changed)
+            if ($ordreFabrication->getUser() === $this) {
+                $ordreFabrication->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }

@@ -1,0 +1,345 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ordres de fabrication{% endblock %}
+
+{% block body %}
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <h1 class="text-3xl font-bold mb-8">
+            Ordres de fabrication
+        </h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {# ================================================== #}
+            {# EN ATTENTE                                         #}
+            {# ================================================== #}
+
+            <div class="bg-gray-100 rounded-xl p-4">
+
+                <h2 class="text-xl font-bold mb-4">
+                    EN ATTENTE
+                </h2>
+
+                {% for ordre in ordres %}
+
+                    {% if ordre.statut == 'EN_ATTENTE' %}
+
+                        <div class="bg-white rounded-lg shadow p-4 mb-4">
+
+                            <h3 class="text-lg font-bold">
+                                {{ ordre.numero }}
+                            </h3>
+
+                            <p class="text-gray-600">
+                                Produit : {{ ordre.produit.nom }}
+                            </p>
+
+                            <p class="text-gray-600">
+                                Quantité : {{ ordre.quantite }}
+                            </p>
+
+                            <div class="mt-4 border-t pt-3">
+
+                                <h4 class="font-semibold mb-3">
+                                    Étapes
+                                </h4>
+
+                                {% for etape in ordre.etapeFabrications %}
+
+                                    <div class="flex items-center justify-between gap-2 text-sm mb-3">
+
+                                        <span>
+                                            {{ etape.ordre }}. {{ etape.nom }}
+                                        </span>
+
+                                        <form
+                                            method="post"
+                                            action="{{ path('app_ordre_fabrication_etape_statut', {
+                                                id: ordre.id,
+                                                etapeId: etape.id
+                                            }) }}"
+                                            class="flex items-center gap-2"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="_token"
+                                                value="{{ csrf_token('modifier_etape') }}"
+                                            >
+
+                                            <select
+                                                name="statut"
+                                                class="text-xs border border-gray-300 rounded px-2 py-1"
+                                            >
+
+                                                <option
+                                                    value="A_FAIRE"
+                                                    {% if etape.statut == 'A_FAIRE' %}selected{% endif %}
+                                                >
+                                                    A FAIRE
+                                                </option>
+
+                                                <option
+                                                    value="EN_COURS"
+                                                    {% if etape.statut == 'EN_COURS' %}selected{% endif %}
+                                                >
+                                                    EN COURS
+                                                </option>
+
+                                                <option
+                                                    value="TERMINEE"
+                                                    {% if etape.statut == 'TERMINEE' %}selected{% endif %}
+                                                >
+                                                    TERMINEE
+                                                </option>
+
+                                            </select>
+
+                                            <button
+                                                type="submit"
+                                                class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700"
+                                            >
+                                                Modifier
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+
+            {# ================================================== #}
+            {# EN COURS                                           #}
+            {# ================================================== #}
+
+            <div class="bg-gray-100 rounded-xl p-4">
+
+                <h2 class="text-xl font-bold mb-4">
+                    EN COURS
+                </h2>
+
+                {% for ordre in ordres %}
+
+                    {% if ordre.statut == 'EN_COURS' %}
+
+                        <div class="bg-white rounded-lg shadow p-4 mb-4">
+
+                            <h3 class="text-lg font-bold">
+                                {{ ordre.numero }}
+                            </h3>
+
+                            <p class="text-gray-600">
+                                Produit : {{ ordre.produit.nom }}
+                            </p>
+
+                            <p class="text-gray-600">
+                                Quantité : {{ ordre.quantite }}
+                            </p>
+
+                            <div class="mt-4 border-t pt-3">
+
+                                <h4 class="font-semibold mb-3">
+                                    Étapes
+                                </h4>
+
+                                {% for etape in ordre.etapeFabrications %}
+
+                                    <div class="flex items-center justify-between gap-2 text-sm mb-3">
+
+                                        <span>
+                                            {{ etape.ordre }}. {{ etape.nom }}
+                                        </span>
+
+                                        <form
+                                            method="post"
+                                            action="{{ path('app_ordre_fabrication_etape_statut', {
+                                                id: ordre.id,
+                                                etapeId: etape.id
+                                            }) }}"
+                                            class="flex items-center gap-2"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="_token"
+                                                value="{{ csrf_token('modifier_etape') }}"
+                                            >
+
+                                            <select
+                                                name="statut"
+                                                class="text-xs border border-gray-300 rounded px-2 py-1"
+                                            >
+
+                                                <option
+                                                    value="A_FAIRE"
+                                                    {% if etape.statut == 'A_FAIRE' %}selected{% endif %}
+                                                >
+                                                    A FAIRE
+                                                </option>
+
+                                                <option
+                                                    value="EN_COURS"
+                                                    {% if etape.statut == 'EN_COURS' %}selected{% endif %}
+                                                >
+                                                    EN COURS
+                                                </option>
+
+                                                <option
+                                                    value="TERMINEE"
+                                                    {% if etape.statut == 'TERMINEE' %}selected{% endif %}
+                                                >
+                                                    TERMINEE
+                                                </option>
+
+                                            </select>
+
+                                            <button
+                                                type="submit"
+                                                class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700"
+                                            >
+                                                Modifier
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+
+            {# ================================================== #}
+            {# TERMINE                                            #}
+            {# ================================================== #}
+
+            <div class="bg-gray-100 rounded-xl p-4">
+
+                <h2 class="text-xl font-bold mb-4">
+                    TERMINE
+                </h2>
+
+                {% for ordre in ordres %}
+
+                    {% if ordre.statut == 'TERMINE' %}
+
+                        <div class="bg-white rounded-lg shadow p-4 mb-4">
+
+                            <h3 class="text-lg font-bold">
+                                {{ ordre.numero }}
+                            </h3>
+
+                            <p class="text-gray-600">
+                                Produit : {{ ordre.produit.nom }}
+                            </p>
+
+                            <p class="text-gray-600">
+                                Quantité : {{ ordre.quantite }}
+                            </p>
+
+                            <div class="mt-4 border-t pt-3">
+
+                                <h4 class="font-semibold mb-3">
+                                    Étapes
+                                </h4>
+
+                                {% for etape in ordre.etapeFabrications %}
+
+                                    <div class="flex items-center justify-between gap-2 text-sm mb-3">
+
+                                        <span>
+                                            {{ etape.ordre }}. {{ etape.nom }}
+                                        </span>
+
+                                        <form
+                                            method="post"
+                                            action="{{ path('app_ordre_fabrication_etape_statut', {
+                                                id: ordre.id,
+                                                etapeId: etape.id
+                                            }) }}"
+                                            class="flex items-center gap-2"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="_token"
+                                                value="{{ csrf_token('modifier_etape') }}"
+                                            >
+
+                                            <select
+                                                name="statut"
+                                                class="text-xs border border-gray-300 rounded px-2 py-1"
+                                            >
+
+                                                <option
+                                                    value="A_FAIRE"
+                                                    {% if etape.statut == 'A_FAIRE' %}selected{% endif %}
+                                                >
+                                                    A FAIRE
+                                                </option>
+
+                                                <option
+                                                    value="EN_COURS"
+                                                    {% if etape.statut == 'EN_COURS' %}selected{% endif %}
+                                                >
+                                                    EN COURS
+                                                </option>
+
+                                                <option
+                                                    value="TERMINEE"
+                                                    {% if etape.statut == 'TERMINEE' %}selected{% endif %}
+                                                >
+                                                    TERMINEE
+                                                </option>
+
+                                            </select>
+
+                                            <button
+                                                type="submit"
+                                                class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700"
+                                            >
+                                                Modifier
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}
