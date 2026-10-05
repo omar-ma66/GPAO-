@@ -6,15 +6,24 @@
 
     <div class="max-w-7xl mx-auto px-4 py-8">
 
-        <h1 class="text-3xl font-bold mb-8">
-            Ordres de fabrication
-        </h1>
+        <div class="flex items-center justify-between mb-8">
+
+            <h1 class="text-3xl font-bold">
+                Ordres de fabrication
+            </h1>
+
+            <a
+                href="{{ path('app_ordre_fabrication_new') }}"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+                Nouvel OF
+            </a>
+
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            {# ================================================== #}
-            {# EN ATTENTE                                         #}
-            {# ================================================== #}
+            {# EN ATTENTE #}
 
             <div class="bg-gray-100 rounded-xl p-4">
 
@@ -40,6 +49,19 @@
                                 Quantité : {{ ordre.quantite }}
                             </p>
 
+                            <div class="mt-3">
+
+                                <a
+                                    href="{{ path('app_ordre_fabrication_edit', {
+                                        id: ordre.id
+                                    }) }}"
+                                    class="inline-block bg-gray-700 text-white text-sm px-3 py-1 rounded hover:bg-gray-800"
+                                >
+                                    Modifier l'OF
+                                </a>
+
+                            </div>
+
                             <div class="mt-4 border-t pt-3">
 
                                 <h4 class="font-semibold mb-3">
@@ -121,9 +143,7 @@
             </div>
 
 
-            {# ================================================== #}
-            {# EN COURS                                           #}
-            {# ================================================== #}
+            {# EN COURS #}
 
             <div class="bg-gray-100 rounded-xl p-4">
 
@@ -149,6 +169,19 @@
                                 Quantité : {{ ordre.quantite }}
                             </p>
 
+                            <div class="mt-3">
+
+                                <a
+                                    href="{{ path('app_ordre_fabrication_edit', {
+                                        id: ordre.id
+                                    }) }}"
+                                    class="inline-block bg-gray-700 text-white text-sm px-3 py-1 rounded hover:bg-gray-800"
+                                >
+                                    Modifier l'OF
+                                </a>
+
+                            </div>
+
                             <div class="mt-4 border-t pt-3">
 
                                 <h4 class="font-semibold mb-3">
@@ -230,9 +263,7 @@
             </div>
 
 
-            {# ================================================== #}
-            {# TERMINE                                            #}
-            {# ================================================== #}
+            {# TERMINE #}
 
             <div class="bg-gray-100 rounded-xl p-4">
 
@@ -257,6 +288,19 @@
                             <p class="text-gray-600">
                                 Quantité : {{ ordre.quantite }}
                             </p>
+
+                            <div class="mt-3">
+
+                                <a
+                                    href="{{ path('app_ordre_fabrication_edit', {
+                                        id: ordre.id
+                                    }) }}"
+                                    class="inline-block bg-gray-700 text-white text-sm px-3 py-1 rounded hover:bg-gray-800"
+                                >
+                                    Modifier l'OF
+                                </a>
+
+                            </div>
 
                             <div class="mt-4 border-t pt-3">
 

@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel ordre de fabrication{% endblock %}
+
+{% block body %}
+
+    <div class="max-w-2xl mx-auto px-4 py-8">
+
+        <h1 class="text-3xl font-bold mb-8">
+            Nouvel ordre de fabrication
+        </h1>
+
+        {{ form_start(form, {
+            attr: {
+                class: 'bg-white rounded-xl shadow p-6 space-y-6'
+            }
+        }) }}
+
+            {{ form_row(form.numero) }}
+
+            {{ form_row(form.quantite) }}
+
+            {{ form_row(form.statut) }}
+
+            {{ form_row(form.produit) }}
+
+            <div class="flex gap-3">
+
+                <button
+                    type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                    Créer l'ordre
+                </button>
+
+                <a
+                    href="{{ path('app_ordre_fabrication') }}"
+                    class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+                >
+                    Annuler
+                </a>
+
+            </div>
+
+        {{ form_end(form) }}
+
+    </div>
+
+{% endblock %}
