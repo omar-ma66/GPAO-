@@ -28,9 +28,19 @@ class EtapeFabrication
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $dateFin = null;
 
-    #[ORM\ManyToOne(inversedBy: 'etapeFabrications')]
+    #[ORM\ManyToOne(
+        targetEntity: OrdreFabrication::class,
+        inversedBy: 'etapeFabrications'
+    )]
     #[ORM\JoinColumn(nullable: false)]
     private ?OrdreFabrication $ordreFabrication = null;
+
+    #[ORM\ManyToOne(
+        targetEntity: TypeEtape::class,
+        inversedBy: 'etapeFabrications'
+    )]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?TypeEtape $typeEtape = null;
 
     public function getId(): ?int
     {
@@ -105,6 +115,18 @@ class EtapeFabrication
     public function setOrdreFabrication(?OrdreFabrication $ordreFabrication): static
     {
         $this->ordreFabrication = $ordreFabrication;
+
+        return $this;
+    }
+
+    public function getTypeEtape(): ?TypeEtape
+    {
+        return $this->typeEtape;
+    }
+
+    public function setTypeEtape(?TypeEtape $typeEtape): static
+    {
+        $this->typeEtape = $typeEtape;
 
         return $this;
     }

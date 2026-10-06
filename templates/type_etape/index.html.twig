@@ -1,0 +1,156 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Étapes de fabrication{% endblock %}
+
+{% block body %}
+
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+                Étapes de fabrication
+            </h1>
+
+            <p class="mt-2 text-gray-600">
+                Définissez les étapes disponibles pour vos ordres de fabrication.
+            </p>
+        </div>
+
+        {% if is_granted('ROLE_USER') %}
+            <a
+                href="{{ path('app_type_etape_new') }}"
+                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+            >
+                + Nouvelle étape
+            </a>
+        {% endif %}
+
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="mb-6 rounded-lg bg-green-100 px-4 py-3 text-green-800">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="mb-6 rounded-lg bg-red-100 px-4 py-3 text-red-800">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% if type_etapes is empty %}
+
+        <div class="rounded-xl bg-white p-8 text-center shadow-sm">
+            <p class="text-gray-500">
+                Aucune étape de fabrication n'est encore définie.
+            </p>
+        </div>
+
+    {% else %}
+
+        <div class="overflow-hidden rounded-xl bg-white shadow-sm">
+
+            <div class="overflow-x-auto">
+
+                <table class="min-w-full divide-y divide-gray-200">
+
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                Nom
+                            </th>
+
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                Description
+                            </th>
+
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                Utilisations
+                            </th>
+
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100">
+
+                        {% for type_etape in type_etapes %}
+
+                            <tr class="hover:bg-gray-50">
+
+                                <td class="whitespace-nowrap px-6 py-4 font-semibold text-gray-900">
+                                    {{ type_etape.nom }}
+                                </td>
+
+                                <td class="px-6 py-4 text-gray-600">
+                                    {{ type_etape.description ?: '—' }}
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4 text-gray-600">
+                                    {{ type_etape.etapeFabrications|length }}
+                                    OF
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4 text-right">
+
+                                    <div class="flex justify-end gap-2">
+
+                                        {% if is_granted('ROLE_USER') %}
+                                            <a
+                                                href="{{ path('app_type_etape_edit', {id: type_etape.id}) }}"
+                                                class="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                                            >
+                                                Modifier
+                                            </a>
+                                        {% endif %}
+
+                                        {% if is_granted('ROLE_ADMIN') %}
+                                            <form
+                                                method="post"
+                                                action="{{ path('app_type_etape_delete', {id: type_etape.id}) }}"
+                                                onsubmit="return confirm('Supprimer cette étape ?');"
+                                            >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="_token"
+                                                    value="{{ csrf_token('supprimer_type_etape_' ~ type_etape.id) }}"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    class="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+                                                >
+                                                    Supprimer
+                                                </button>
+
+                                            </form>
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
