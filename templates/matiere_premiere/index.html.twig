@@ -1,0 +1,180 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Matières premières{% endblock %}
+
+{% block body %}
+
+<div class="min-h-screen bg-gray-100 py-10">
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+                Matières premières
+            </h1>
+
+            <p class="mt-1 text-sm text-gray-600">
+                Gestion des matières premières utilisées dans la production.
+            </p>
+        </div>
+
+        {% if is_granted('ROLE_USER') %}
+            <a
+                href="{{ path('app_matiere_premiere_new') }}"
+                class="inline-flex items-center justify-center rounded-lg
+                       bg-blue-600 px-5 py-3 text-sm font-semibold
+                       text-white shadow-sm transition
+                       hover:bg-blue-700"
+            >
+                + Nouvelle matière
+            </a>
+        {% endif %}
+
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div
+            class="mb-6 rounded-lg border border-green-200
+                   bg-green-50 p-4 text-sm text-green-700"
+        >
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% if matieres is empty %}
+
+        <div class="rounded-2xl bg-white p-10 text-center shadow-sm">
+
+            <h2 class="text-xl font-semibold text-gray-900">
+                Aucune matière première
+            </h2>
+
+            <p class="mt-2 text-gray-600">
+                Commencez par créer votre première matière première.
+            </p>
+
+        </div>
+
+    {% else %}
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+            {% for matiere in matieres %}
+
+                <div
+                    class="overflow-hidden rounded-2xl bg-white
+                           shadow-sm transition hover:-translate-y-1
+                           hover:shadow-lg"
+                >
+
+                    <div class="p-6">
+
+                        <div class="flex items-start justify-between gap-4">
+
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-900">
+                                    {{ matiere.nom }}
+                                </h2>
+
+                                <span
+                                    class="mt-2 inline-flex rounded-full
+                                           bg-gray-100 px-3 py-1 text-xs
+                                           font-semibold text-gray-700"
+                                >
+                                    {{ matiere.reference }}
+                                </span>
+                            </div>
+
+                            <div
+                                class="flex h-10 w-10 shrink-0 items-center
+                                       justify-center rounded-full
+                                       bg-blue-100 text-blue-600"
+                            >
+                                MP
+                            </div>
+
+                        </div>
+
+                        {% if matiere.description %}
+                            <p class="mt-5 text-sm leading-6 text-gray-600">
+                                {{ matiere.description }}
+                            </p>
+                        {% else %}
+                            <p class="mt-5 text-sm italic text-gray-400">
+                                Aucune description.
+                            </p>
+                        {% endif %}
+
+                        <div class="mt-6 flex flex-wrap gap-3">
+
+                            {% if is_granted('ROLE_USER') %}
+
+                                <a
+                                    href="{{ path(
+                                        'app_matiere_premiere_edit',
+                                        {id: matiere.id}
+                                    ) }}"
+                                    class="rounded-lg bg-amber-100
+                                           px-4 py-2 text-sm font-semibold
+                                           text-amber-700 transition
+                                           hover:bg-amber-200"
+                                >
+                                    Modifier
+                                </a>
+
+                            {% endif %}
+
+                            {% if is_granted('ROLE_ADMIN') %}
+
+                                <form
+                                    method="post"
+                                    action="{{ path(
+                                        'app_matiere_premiere_delete',
+                                        {id: matiere.id}
+                                    ) }}"
+                                    onsubmit="return confirm(
+                                        'Voulez-vous vraiment supprimer cette matière première ?'
+                                    );"
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="_token"
+                                        value="{{ csrf_token(
+                                            'supprimer_matiere_premiere'
+                                        ) }}"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        class="rounded-lg bg-red-100
+                                               px-4 py-2 text-sm font-semibold
+                                               text-red-700 transition
+                                               hover:bg-red-200"
+                                    >
+                                        Supprimer
+                                    </button>
+
+                                </form>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</div>
+
+{% endblock %}

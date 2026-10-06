@@ -40,4 +40,16 @@ class OrdreFabricationRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+public function findDernierNumeroDeLAnnee(string $annee): ?string
+{
+    return $this->createQueryBuilder('o')
+        ->select('o.numero')
+        ->andWhere('o.numero LIKE :prefix')
+        ->setParameter('prefix', 'OF-' . $annee . '-%')
+        ->orderBy('o.numero', 'DESC')
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getSingleScalarResult();
+}
 }

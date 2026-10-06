@@ -15,7 +15,7 @@ class OrdreFabrication
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(length: 50,unique:true)]
     private ?string $numero = null;
 
     #[ORM\Column]
@@ -40,7 +40,7 @@ class OrdreFabrication
     /**
      * @var Collection<int, EtapeFabrication>
      */
-    #[ORM\OneToMany(targetEntity: EtapeFabrication::class, mappedBy: 'ordreFabrication')]
+  #[ORM\OneToMany(targetEntity: EtapeFabrication::class,mappedBy: 'ordreFabrication',cascade: ['persist', 'remove'] )]
     private Collection $etapeFabrications;
 
     #[ORM\ManyToOne(inversedBy: 'ordreFabrications')]

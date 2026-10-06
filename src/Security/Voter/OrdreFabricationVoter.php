@@ -10,17 +10,20 @@ use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 class OrdreFabricationVoter extends Voter
 {
     public const EDIT = 'EDIT';
+    public const DELETE = 'DELETE';
+   protected function supports(
+    string $attribute,
+    mixed $subject
+): bool {
+    return in_array(
+        $attribute,
+        [self::EDIT, self::DELETE],
+        true
+    )
+    && $subject instanceof OrdreFabrication;
+}
 
-    protected function supports(
-        string $attribute,
-        mixed $subject
-    ): bool {
-        return $attribute === self::EDIT
-            && $subject instanceof OrdreFabrication;
-    }
-
-    protected function voteOnAttribute(string $attribute,mixed $subject, TokenInterface $token,?Vote $vote=null
-    ): bool {
+    protected function voteOnAttribute(string $attribute,mixed $subject, TokenInterface $token,?Vote $vote=null): bool {
         /** @var OrdreFabrication $ordre */
         $ordre = $subject;
 
