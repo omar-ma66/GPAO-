@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\MatierePremiereRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MatierePremiereRepository::class)]
@@ -19,21 +18,34 @@ class MatierePremiere
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 255)]
     private ?string $reference = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
     /**
      * @var Collection<int, Produit>
      */
-    #[ORM\ManyToMany(targetEntity: Produit::class, mappedBy: 'matierePremiere')]
+    #[ORM\ManyToMany(
+        targetEntity: Produit::class,
+        mappedBy: 'matierePremiere'
+    )]
     private Collection $produits;
+
+    /**
+     * @var Collection<int, OrdreFabrication>
+     */
+    #[ORM\ManyToMany(
+        targetEntity: OrdreFabrication::class,
+        mappedBy: 'matieresPremieres'
+    )]
+    private Collection $ordreFabrications;
 
     public function __construct()
     {
         $this->produits = new ArrayCollection();
+        $this->ordreFabrications = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -70,7 +82,7 @@ class MatierePremiere
         return $this->description;
     }
 
-    public function setDescription(string $description): static
+    public function setDescription(?string $description): static
     {
         $this->description = $description;
 
@@ -100,6 +112,32 @@ class MatierePremiere
         if ($this->produits->removeElement($produit)) {
             $produit->removeMatierePremiere($this);
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OrdreFabrication>
+     */
+    public function getOrdreFabrications(): Collection
+    {
+        return $this->ordreFabrications;
+    }
+
+    public function addOrdreFabrication(
+        OrdreFabrication $ordreFabrication
+    ): static {
+        if (!$this->ordreFabrications->contains($ordreFabrication)) {
+            $this->ordreFabrications->add($ordreFabrication);
+        }
+
+        return $this;
+    }
+
+    public function removeOrdreFabrication(
+        OrdreFabrication $ordreFabrication
+    ): static {
+        $this->ordreFabrications->removeElement($ordreFabrication);
 
         return $this;
     }

@@ -15,7 +15,7 @@ class OrdreFabrication
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 50,unique:true)]
+    #[ORM\Column(length: 50, unique: true)]
     private ?string $numero = null;
 
     #[ORM\Column]
@@ -33,23 +33,44 @@ class OrdreFabrication
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $dateFin = null;
 
-    #[ORM\ManyToOne(inversedBy: 'ordreFabrications')]
+    #[ORM\ManyToOne(
+        targetEntity: Produit::class,
+        inversedBy: 'ordreFabrications'
+    )]
     #[ORM\JoinColumn(nullable: false)]
     private ?Produit $produit = null;
 
     /**
      * @var Collection<int, EtapeFabrication>
      */
-  #[ORM\OneToMany(targetEntity: EtapeFabrication::class,mappedBy: 'ordreFabrication',cascade: ['persist', 'remove'] )]
+    #[ORM\OneToMany(
+        targetEntity: EtapeFabrication::class,
+        mappedBy: 'ordreFabrication',
+        cascade: ['persist', 'remove']
+    )]
     private Collection $etapeFabrications;
 
-    #[ORM\ManyToOne(inversedBy: 'ordreFabrications')]
+    #[ORM\ManyToOne(
+        targetEntity: User::class,
+        inversedBy: 'ordreFabrications'
+    )]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
+
+    /**
+     * @var Collection<int, MatierePremiere>
+     */
+    #[ORM\ManyToMany(
+        targetEntity: MatierePremiere::class,
+        inversedBy: 'ordreFabrications'
+    )]
+    #[ORM\JoinTable(name: 'ordre_fabrication_matiere_premiere')]
+    private Collection $matieresPremieres;
 
     public function __construct()
     {
         $this->etapeFabrications = new ArrayCollection();
+        $this->matieresPremieres = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -149,8 +170,9 @@ class OrdreFabrication
         return $this->etapeFabrications;
     }
 
-    public function addEtapeFabrication(EtapeFabrication $etapeFabrication): static
-    {
+    public function addEtapeFabrication(
+        EtapeFabrication $etapeFabrication
+    ): static {
         if (!$this->etapeFabrications->contains($etapeFabrication)) {
             $this->etapeFabrications->add($etapeFabrication);
             $etapeFabrication->setOrdreFabrication($this);
@@ -159,14 +181,10 @@ class OrdreFabrication
         return $this;
     }
 
-    public function removeEtapeFabrication(EtapeFabrication $etapeFabrication): static
-    {
-        if ($this->etapeFabrications->removeElement($etapeFabrication)) {
-            // set the owning side to null (unless already changed)
-            if ($etapeFabrication->getOrdreFabrication() === $this) {
-                $etapeFabrication->setOrdreFabrication(null);
-            }
-        }
+    public function removeEtapeFabrication(
+        EtapeFabrication $etapeFabrication
+    ): static {
+        $this->etapeFabrications->removeElement($etapeFabrication);
 
         return $this;
     }
@@ -179,6 +197,32 @@ class OrdreFabrication
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MatierePremiere>
+     */
+    public function getMatieresPremieres(): Collection
+    {
+        return $this->matieresPremieres;
+    }
+
+    public function addMatierePremiere(
+        MatierePremiere $matierePremiere
+    ): static {
+        if (!$this->matieresPremieres->contains($matierePremiere)) {
+            $this->matieresPremieres->add($matierePremiere);
+        }
+
+        return $this;
+    }
+
+    public function removeMatierePremiere(
+        MatierePremiere $matierePremiere
+    ): static {
+        $this->matieresPremieres->removeElement($matierePremiere);
 
         return $this;
     }
