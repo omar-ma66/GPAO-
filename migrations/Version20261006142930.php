@@ -16,7 +16,7 @@ final class Version20261006142930 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // 1. On crée d'abord la table type_etape
+        // Création du catalogue des types d'étapes.
         $this->addSql('
             CREATE TABLE type_etape (
                 id INT AUTO_INCREMENT NOT NULL,
@@ -26,47 +26,46 @@ final class Version20261006142930 extends AbstractMigration
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
         ');
 
-        // 2. On ajoute la colonne nullable dans les étapes existantes
+        // Ajout de la relation avec EtapeFabrication.
+        // Elle est temporairement nullable car les anciennes étapes
+        // n'ont pas encore de TypeEtape.
         $this->addSql('
             ALTER TABLE etape_fabrication
             ADD type_etape_id INT DEFAULT NULL
         ');
 
-        // 3. Une fois la table créée, on peut créer la clé étrangère
+        // Création de la clé étrangère.
         $this->addSql('
             ALTER TABLE etape_fabrication
-            ADD CONSTRAINT FK_ETAPE_TYPE
+            ADD CONSTRAINT FK_CCE6EE4987738551
             FOREIGN KEY (type_etape_id)
             REFERENCES type_etape (id)
         ');
 
-        // 4. Index pour la clé étrangère
+        // Index attendu par Doctrine.
         $this->addSql('
-            CREATE INDEX IDX_ETAPE_TYPE
+            CREATE INDEX IDX_CCE6EE4987738551
             ON etape_fabrication (type_etape_id)
         ');
     }
 
     public function down(Schema $schema): void
     {
-        // On supprime d'abord la contrainte et l'index
         $this->addSql('
             ALTER TABLE etape_fabrication
-            DROP FOREIGN KEY FK_ETAPE_TYPE
+            DROP FOREIGN KEY FK_CCE6EE4987738551
         ');
 
         $this->addSql('
-            DROP INDEX IDX_ETAPE_TYPE
+            DROP INDEX IDX_CCE6EE4987738551
             ON etape_fabrication
         ');
 
-        // Puis la colonne
         $this->addSql('
             ALTER TABLE etape_fabrication
             DROP type_etape_id
         ');
 
-        // Et enfin la table
         $this->addSql('DROP TABLE type_etape');
     }
 }

@@ -5,41 +5,37 @@ namespace App\Security\Voter;
 use App\Entity\OrdreFabrication;
 use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
+use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+
 class OrdreFabricationVoter extends Voter
 {
     public const EDIT = 'EDIT';
-    public const DELETE = 'DELETE';
-   protected function supports(
-    string $attribute,
-    mixed $subject
-): bool {
-    return in_array(
-        $attribute,
-        [self::EDIT, self::DELETE],
-        true
-    )
-    && $subject instanceof OrdreFabrication;
-}
 
-    protected function voteOnAttribute(string $attribute,mixed $subject, TokenInterface $token,?Vote $vote=null): bool {
-        /** @var OrdreFabrication $ordre */
-        $ordre = $subject;
+    protected function supports(string $attribute, mixed $subject): bool
+    {
+        return $attribute === self::EDIT
+            && $subject instanceof OrdreFabrication;
+    }
+
+    protected function voteOnAttribute(
+        string $attribute,
+        mixed $subject,
+        TokenInterface $token,
+        ?Vote $vote = null
+    ): bool {
+        $ordreFabrication = $subject;
 
         $user = $token->getUser();
 
-        // Personne non connectée
         if (!$user instanceof User) {
             return false;
         }
 
-        // L'administrateur peut modifier tous les ordres
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return true;
         }
 
-        // Un utilisateur normal peut uniquement modifier ses propres ordres
-        return $ordre->getUser() === $user;
+        return $ordreFabrication->getUser() === $user;
     }
 }

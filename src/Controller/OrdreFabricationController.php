@@ -810,6 +810,78 @@ class OrdreFabricationController extends AbstractController
 
     /*
      * ============================================================
+     * SUPPRESSION D'UN OF EN ATTENTE
+     * ============================================================
+     */
+
+    #[Route(
+        '/{id<\d+>}/supprimer',
+        name: 'app_ordre_fabrication_supprimer',
+        methods: ['POST']
+    )]
+    public function supprimer(
+        Request $request,
+        int $id
+    ): Response {
+        $ordre = $this->ordreFabricationRepository->find($id);
+
+        if (!$ordre) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(
+            OrdreFabricationVoter::EDIT,
+            $ordre
+        );
+
+        if (!$this->isCsrfTokenValid(
+            'supprimer_' . $id,
+            $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Token CSRF invalide.'
+            );
+        }
+
+        if ($ordre->getDateArchivage() !== null) {
+            $this->addFlash(
+                'error',
+                'Un OF archivé ne peut pas être supprimé.'
+            );
+
+            return $this->redirectToRoute(
+                'app_ordre_fabrication'
+            );
+        }
+
+        if ($ordre->getStatut() !== 'EN_ATTENTE') {
+            $this->addFlash(
+                'error',
+                'Seul un OF en attente peut être supprimé.'
+            );
+
+            return $this->redirectToRoute(
+                'app_ordre_fabrication'
+            );
+        }
+
+        $numero = $ordre->getNumero();
+
+        $this->entityManager->remove($ordre);
+        $this->entityManager->flush();
+
+        $this->addFlash(
+            'success',
+            'L’ordre de fabrication ' . $numero . ' a été supprimé.'
+        );
+
+        return $this->redirectToRoute(
+            'app_ordre_fabrication'
+        );
+    }
+
+    /*
+     * ============================================================
      * ARCHIVAGE
      * ============================================================
      */

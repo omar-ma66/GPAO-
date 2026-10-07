@@ -6,13 +6,16 @@ use App\Entity\OrdreFabrication;
 use App\Entity\User;
 use App\Security\Voter\OrdreFabricationVoter;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Core\User\UserInterface;
+
 class OrdreFabricationVoterTest extends TestCase
 {
     public function testProprietairePeutModifier(): void
     {
         $user = new User();
+        $user->setEmail('user@gpao.local');
+        $user->setRoles(['ROLE_USER']);
 
         $ordre = new OrdreFabrication();
         $ordre->setUser($user);
@@ -33,117 +36,132 @@ class OrdreFabricationVoterTest extends TestCase
 
         self::assertSame(1, $resultat);
     }
+
     public function testUtilisateurQuiNestPasProprietaireNePeutPasModifier(): void
-{
-    $proprietaire = new User();
-    $autreUtilisateur = new User();
+    {
+        $proprietaire = new User();
+        $proprietaire->setEmail('proprietaire@gpao.local');
+        $proprietaire->setRoles(['ROLE_USER']);
 
-    $ordre = new OrdreFabrication();
-    $ordre->setUser($proprietaire);
+        $autreUtilisateur = new User();
+        $autreUtilisateur->setEmail('autre@gpao.local');
+        $autreUtilisateur->setRoles(['ROLE_USER']);
 
-    $token = new UsernamePasswordToken(
-        $autreUtilisateur,
-        'main',
-        $autreUtilisateur->getRoles()
-    );
+        $ordre = new OrdreFabrication();
+        $ordre->setUser($proprietaire);
 
-    $voter = new OrdreFabricationVoter();
+        $token = new UsernamePasswordToken(
+            $autreUtilisateur,
+            'main',
+            $autreUtilisateur->getRoles()
+        );
 
-    $resultat = $voter->vote(
-        $token,
-        $ordre,
-        [OrdreFabricationVoter::EDIT]
-    );
+        $voter = new OrdreFabricationVoter();
 
-    self::assertSame(-1, $resultat);
-}
+        $resultat = $voter->vote(
+            $token,
+            $ordre,
+            [OrdreFabricationVoter::EDIT]
+        );
 
-public function testAdminPeutModifierNimporteQuelOrdre(): void
-{
-    $proprietaire = new User();
-    $admin = new User();
+        self::assertSame(-1, $resultat);
+    }
 
-    $admin->setRoles(['ROLE_ADMIN']);
+    public function testAdminPeutModifierNimporteQuelOrdre(): void
+    {
+        $proprietaire = new User();
+        $proprietaire->setEmail('proprietaire@gpao.local');
+        $proprietaire->setRoles(['ROLE_USER']);
 
-    $ordre = new OrdreFabrication();
-    $ordre->setUser($proprietaire);
+        $admin = new User();
+        $admin->setEmail('admin@gpao.local');
+        $admin->setRoles(['ROLE_ADMIN']);
 
-    $token = new UsernamePasswordToken(
-        $admin,
-        'main',
-        $admin->getRoles()
-    );
+        $ordre = new OrdreFabrication();
+        $ordre->setUser($proprietaire);
 
-    $voter = new OrdreFabricationVoter();
+        $token = new UsernamePasswordToken(
+            $admin,
+            'main',
+            $admin->getRoles()
+        );
 
-    $resultat = $voter->vote(
-        $token,
-        $ordre,
-        [OrdreFabricationVoter::EDIT]
-    );
+        $voter = new OrdreFabricationVoter();
 
-    self::assertSame(1, $resultat);
-}
-public function testUtilisateurNonConnecteNePeutPasModifier(): void
-{
-    $proprietaire = new User();
+        $resultat = $voter->vote(
+            $token,
+            $ordre,
+            [OrdreFabricationVoter::EDIT]
+        );
 
-    $ordre = new OrdreFabrication();
-    $ordre->setUser($proprietaire);
+        self::assertSame(1, $resultat);
+    }
 
-    $anonymousUser = new class implements \Symfony\Component\Security\Core\User\UserInterface {
-        public function getRoles(): array
-        {
-            return [];
-        }
+    public function testUtilisateurNonConnecteNePeutPasModifier(): void
+    {
+        $proprietaire = new User();
+        $proprietaire->setEmail('proprietaire@gpao.local');
+        $proprietaire->setRoles(['ROLE_USER']);
 
-        public function getUserIdentifier(): string
-        {
-            return 'anonymous';
-        }
+        $ordre = new OrdreFabrication();
+        $ordre->setUser($proprietaire);
 
-        public function eraseCredentials(): void
-        {
-        }
-    };
+        $utilisateurAnonyme = new class implements UserInterface {
+            public function getRoles(): array
+            {
+                return [];
+            }
 
-    $token = new UsernamePasswordToken(
-        $anonymousUser,
-        'main',
-        []
-    );
+            public function eraseCredentials(): void
+            {
+            }
 
-    $voter = new OrdreFabricationVoter();
+            public function getUserIdentifier(): string
+            {
+                return '';
+            }
+        };
 
-    $resultat = $voter->vote(
-        $token,
-        $ordre,
-        [OrdreFabricationVoter::EDIT]
-    );
+        $token = new UsernamePasswordToken(
+            $utilisateurAnonyme,
+            'main',
+            []
+        );
 
-    self::assertSame(-1, $resultat);
-}
-public function testVoterSabstientPourUnAutreAttribut(): void
-{
-    $user = new User();
+        $voter = new OrdreFabricationVoter();
 
-    $ordre = new OrdreFabrication();
-    $ordre->setUser($user);
+        $resultat = $voter->vote(
+            $token,
+            $ordre,
+            [OrdreFabricationVoter::EDIT]
+        );
 
-    $token = new UsernamePasswordToken(
-        $user,
-        'main',
-        $user->getRoles()
-    );
+        self::assertSame(-1, $resultat);
+    }
 
-    $voter = new OrdreFabricationVoter();
+    public function testVoterSabstientPourUnAutreAttribut(): void
+    {
+        $user = new User();
+        $user->setEmail('user@gpao.local');
+        $user->setRoles(['ROLE_USER']);
 
-    $resultat = $voter->vote(
-        $token,
-        $ordre,
-        ['DELETE']
-    );
+        $ordre = new OrdreFabrication();
+        $ordre->setUser($user);
 
-    self::assertSame(0, $resultat);
-}
+        $token = new UsernamePasswordToken(
+            $user,
+            'main',
+            $user->getRoles()
+        );
+
+        $voter = new OrdreFabricationVoter();
+
+        $resultat = $voter->vote(
+            $token,
+            $ordre,
+            ['DELETE']
+        );
+
+        self::assertSame(0, $resultat);
+    }
 }

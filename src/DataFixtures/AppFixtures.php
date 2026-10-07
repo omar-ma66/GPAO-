@@ -2,201 +2,392 @@
 
 namespace App\DataFixtures;
 
-use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Persistence\ObjectManager;
-use App\Entity\Produit;
-use App\Entity\MatierePremiere;
-use App\Entity\User;
-use App\Entity\OrdreFabrication;
 use App\Entity\EtapeFabrication;
+use App\Entity\MatierePremiere;
+use App\Entity\OrdreFabrication;
+use App\Entity\Produit;
+use App\Entity\TypeEtape;
+use App\Entity\User;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class AppFixtures extends Fixture
+class AppFixtures extends Fixture implements DependentFixtureInterface
 {
+    public function __construct(
+        private UserPasswordHasherInterface $passwordHasher
+    ) {
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            TypeEtapeFixtures::class,
+        ];
+    }
+
     public function load(ObjectManager $manager): void
     {
-        $user = new User();
+        /*
+         * ============================================================
+         * UTILISATEUR ADMIN
+         * ============================================================
+         */
+        $admin = new User();
+        $admin->setEmail('admin@gpao.local');
+        $admin->setRoles(['ROLE_ADMIN']);
+        $admin->setPassword(
+            $this->passwordHasher->hashPassword($admin, 'password')
+        );
 
-        $user->setEmail('production@gpao.fr');
-        $user->setRoles(['ROLE_USER']);
-        $user->setPassword('password');
+        $manager->persist($admin);
+        $this->addReference('user_admin', $admin);
 
-        $manager->persist($user);
+        /*
+         * ============================================================
+         * UTILISATEUR PRODUCTION
+         * ============================================================
+         */
+        $production = new User();
+        $production->setEmail('production@gpao.local');
+        $production->setRoles(['ROLE_USER']);
+        $production->setPassword(
+            $this->passwordHasher->hashPassword($production, 'password')
+        );
 
+        $manager->persist($production);
+        $this->addReference('user_production', $production);
 
-
-$manager->flush();
-
-
-
-
-$ordre = new OrdreFabrication();
-
-$ordre->setNumero('OF-2026-001');
-$ordre->setQuantite(100);
-$ordre->setStatut('EN_ATTENTE');
-$ordre->setDateCreation(new \DateTimeImmutable());
-
-
-
+        /*
+         * ============================================================
+         * PRODUITS
+         * ============================================================
+         */
 
         $produit1 = new Produit();
         $produit1->setNom('Chaise industrielle');
         $produit1->setReference('CHA-001');
-        $produit1->setDescription('Chaise destinée à la production industrielle');
+        $produit1->setDescription(
+            'Chaise industrielle métallique destinée aux ateliers.'
+        );
+
+        $manager->persist($produit1);
+        $this->addReference('produit_1', $produit1);
 
         $produit2 = new Produit();
         $produit2->setNom('Table industrielle');
         $produit2->setReference('TAB-001');
-        $produit2->setDescription('Table destinée à la production industrielle');
+        $produit2->setDescription(
+            'Table industrielle robuste pour environnement de production.'
+        );
+
+        $manager->persist($produit2);
+        $this->addReference('produit_2', $produit2);
 
         $produit3 = new Produit();
         $produit3->setNom('Établi industriel');
         $produit3->setReference('ETA-001');
-        $produit3->setDescription('Établi destiné à la production industrielle');
+        $produit3->setDescription(
+            'Établi industriel destiné aux travaux de fabrication.'
+        );
+
+        $manager->persist($produit3);
+        $this->addReference('produit_3', $produit3);
+
+        /*
+         * ============================================================
+         * MATIÈRES PREMIÈRES
+         * ============================================================
+         */
 
         $acier = new MatierePremiere();
         $acier->setNom('Acier');
         $acier->setReference('MAT-001');
-        $acier->setDescription('Acier utilisé pour la fabrication');
+        $acier->setDescription(
+            'Acier utilisé pour les structures métalliques.'
+        );
+
+        $manager->persist($acier);
+        $this->addReference('matiere_acier', $acier);
 
         $aluminium = new MatierePremiere();
         $aluminium->setNom('Aluminium');
         $aluminium->setReference('MAT-002');
-        $aluminium->setDescription('Aluminium utilisé pour la fabrication');
+        $aluminium->setDescription(
+            'Aluminium utilisé pour les pièces légères.'
+        );
+
+        $manager->persist($aluminium);
+        $this->addReference('matiere_aluminium', $aluminium);
 
         $plastique = new MatierePremiere();
         $plastique->setNom('Plastique');
         $plastique->setReference('MAT-003');
-        $plastique->setDescription('Plastique utilisé pour la fabrication');
+        $plastique->setDescription(
+            'Plastique utilisé pour certains composants.'
+        );
 
+        $manager->persist($plastique);
+        $this->addReference('matiere_plastique', $plastique);
 
+        /*
+         * ============================================================
+         * ASSOCIATION MATIÈRES PREMIÈRES <-> PRODUITS
+         * ============================================================
+         */
+
+        // Chaise industrielle
         $produit1->addMatierePremiere($acier);
         $produit1->addMatierePremiere($plastique);
 
+        // Table industrielle
         $produit2->addMatierePremiere($acier);
         $produit2->addMatierePremiere($aluminium);
 
+        // Établi industriel
         $produit3->addMatierePremiere($acier);
         $produit3->addMatierePremiere($aluminium);
 
+        /*
+         * ============================================================
+         * RÉCUPÉRATION DES TYPES D'ÉTAPES
+         * ============================================================
+         */
 
-$etape1 = new EtapeFabrication();
-$etape1->setNom('Découpe');
-$etape1->setOrdre(1);
-$etape1->setStatut('TERMINEE');
-$etape1->setOrdreFabrication($ordre);
+        /** @var TypeEtape $typeDecoupe */
+        $typeDecoupe = $this->getReference(
+            TypeEtapeFixtures::DECOUPE,
+            TypeEtape::class
+        );
 
-$manager->persist($etape1);
+        /** @var TypeEtape $typeAssemblage */
+        $typeAssemblage = $this->getReference(
+            TypeEtapeFixtures::ASSEMBLAGE,
+            TypeEtape::class
+        );
 
+        /** @var TypeEtape $typeControle */
+        $typeControle = $this->getReference(
+            TypeEtapeFixtures::CONTROLE,
+            TypeEtape::class
+        );
 
-$etape2 = new EtapeFabrication();
-$etape2->setNom('Assemblage');
-$etape2->setOrdre(2);
-$etape2->setStatut('EN_COURS');
-$etape2->setOrdreFabrication($ordre);
+        /*
+         * ============================================================
+         * ORDRE DE FABRICATION N°1
+         * ============================================================
+         */
 
-$manager->persist($etape2);
+        $of1 = new OrdreFabrication();
+        $of1->setNumero('OF-2026-001');
+        $of1->setQuantite(100);
+        $of1->setStatut('EN_ATTENTE');
+        $of1->setDateCreation(
+            new \DateTimeImmutable('2026-10-01 08:00:00')
+        );
+        $of1->setProduit($produit1);
+        $of1->setUser($production);
 
+        // Matières utilisées par cet OF
+        $of1->addMatierePremiere($acier);
+        $of1->addMatierePremiere($plastique);
 
-$etape3 = new EtapeFabrication();
-$etape3->setNom('Contrôle');
-$etape3->setOrdre(3);
-$etape3->setStatut('A_FAIRE');
-$etape3->setOrdreFabrication($ordre);
+        $manager->persist($of1);
 
-$manager->persist($etape3);
+        /*
+         * Étape 1 : Découpe
+         */
+        $etape1Of1 = new EtapeFabrication();
+        $etape1Of1->setNom($typeDecoupe->getNom());
+        $etape1Of1->setOrdre(1);
+        $etape1Of1->setStatut('A_FAIRE');
+        $etape1Of1->setOrdreFabrication($of1);
+        $etape1Of1->setTypeEtape($typeDecoupe);
 
+        $manager->persist($etape1Of1);
 
+        /*
+         * Étape 2 : Assemblage
+         */
+        $etape2Of1 = new EtapeFabrication();
+        $etape2Of1->setNom($typeAssemblage->getNom());
+        $etape2Of1->setOrdre(2);
+        $etape2Of1->setStatut('A_FAIRE');
+        $etape2Of1->setOrdreFabrication($of1);
+        $etape2Of1->setTypeEtape($typeAssemblage);
 
+        $manager->persist($etape2Of1);
 
+        /*
+         * Étape 3 : Contrôle
+         */
+        $etape3Of1 = new EtapeFabrication();
+        $etape3Of1->setNom($typeControle->getNom());
+        $etape3Of1->setOrdre(3);
+        $etape3Of1->setStatut('A_FAIRE');
+        $etape3Of1->setOrdreFabrication($of1);
+        $etape3Of1->setTypeEtape($typeControle);
 
-        $ordre->setProduit($produit1);
-$ordre->setUser($user);
+        $manager->persist($etape3Of1);
 
-$manager->persist($ordre);
+        /*
+         * ============================================================
+         * ORDRE DE FABRICATION N°2
+         * ============================================================
+         */
 
-$ordre2 = new OrdreFabrication();
-$etape21 = new EtapeFabrication();
-$etape21->setNom('Découpe');
-$etape21->setOrdre(1);
-$etape21->setStatut('TERMINEE');
-$etape21->setOrdreFabrication($ordre2);
-$manager->persist($etape21);
+        $of2 = new OrdreFabrication();
+        $of2->setNumero('OF-2026-002');
+        $of2->setQuantite(50);
+        $of2->setStatut('EN_COURS');
+        $of2->setDateCreation(
+            new \DateTimeImmutable('2026-10-02 08:00:00')
+        );
+        $of2->setDateDebut(
+            new \DateTimeImmutable('2026-10-02 09:00:00')
+        );
+        $of2->setProduit($produit2);
+        $of2->setUser($production);
 
-$etape22 = new EtapeFabrication();
-$etape22->setNom('Assemblage');
-$etape22->setOrdre(2);
-$etape22->setStatut('EN_COURS');
-$etape22->setOrdreFabrication($ordre2);
-$manager->persist($etape22);
+        // Matières utilisées par cet OF
+        $of2->addMatierePremiere($acier);
+        $of2->addMatierePremiere($aluminium);
 
-$etape23 = new EtapeFabrication();
-$etape23->setNom('Contrôle');
-$etape23->setOrdre(3);
-$etape23->setStatut('A_FAIRE');
-$etape23->setOrdreFabrication($ordre2);
-$manager->persist($etape23);
+        $manager->persist($of2);
 
+        /*
+         * Étape 1 : Découpe terminée
+         */
+        $etape1Of2 = new EtapeFabrication();
+        $etape1Of2->setNom($typeDecoupe->getNom());
+        $etape1Of2->setOrdre(1);
+        $etape1Of2->setStatut('TERMINEE');
+        $etape1Of2->setDateDebut(
+            new \DateTimeImmutable('2026-10-02 09:00:00')
+        );
+        $etape1Of2->setDateFin(
+            new \DateTimeImmutable('2026-10-02 10:30:00')
+        );
+        $etape1Of2->setOrdreFabrication($of2);
+        $etape1Of2->setTypeEtape($typeDecoupe);
 
+        $manager->persist($etape1Of2);
 
+        /*
+         * Étape 2 : Assemblage en cours
+         */
+        $etape2Of2 = new EtapeFabrication();
+        $etape2Of2->setNom($typeAssemblage->getNom());
+        $etape2Of2->setOrdre(2);
+        $etape2Of2->setStatut('EN_COURS');
+        $etape2Of2->setDateDebut(
+            new \DateTimeImmutable('2026-10-02 11:00:00')
+        );
+        $etape2Of2->setOrdreFabrication($of2);
+        $etape2Of2->setTypeEtape($typeAssemblage);
 
+        $manager->persist($etape2Of2);
 
-$ordre2->setNumero('OF-2026-002');
-$ordre2->setQuantite(50);
-$ordre2->setStatut('EN_COURS');
-$ordre2->setDateCreation(new \DateTimeImmutable());
-$ordre2->setProduit($produit2);
-$ordre2->setUser($user);
+        /*
+         * Étape 3 : Contrôle à faire
+         */
+        $etape3Of2 = new EtapeFabrication();
+        $etape3Of2->setNom($typeControle->getNom());
+        $etape3Of2->setOrdre(3);
+        $etape3Of2->setStatut('A_FAIRE');
+        $etape3Of2->setOrdreFabrication($of2);
+        $etape3Of2->setTypeEtape($typeControle);
 
-$manager->persist($ordre2);
+        $manager->persist($etape3Of2);
 
+        /*
+         * ============================================================
+         * ORDRE DE FABRICATION N°3
+         * ============================================================
+         */
 
-$ordre3 = new OrdreFabrication();
-$etape31 = new EtapeFabrication();
-$etape31->setNom('Découpe');
-$etape31->setOrdre(1);
-$etape31->setStatut('TERMINEE');
-$etape31->setOrdreFabrication($ordre3);
-$manager->persist($etape31);
+        $of3 = new OrdreFabrication();
+        $of3->setNumero('OF-2026-003');
+        $of3->setQuantite(25);
+        $of3->setStatut('TERMINE');
+        $of3->setDateCreation(
+            new \DateTimeImmutable('2026-10-03 08:00:00')
+        );
+        $of3->setDateDebut(
+            new \DateTimeImmutable('2026-10-03 09:00:00')
+        );
+        $of3->setDateFin(
+            new \DateTimeImmutable('2026-10-03 16:00:00')
+        );
+        $of3->setProduit($produit3);
+        $of3->setUser($production);
 
-$etape32 = new EtapeFabrication();
-$etape32->setNom('Assemblage');
-$etape32->setOrdre(2);
-$etape32->setStatut('TERMINEE');
-$etape32->setOrdreFabrication($ordre3);
-$manager->persist($etape32);
+        // Matières utilisées par cet OF
+        $of3->addMatierePremiere($acier);
+        $of3->addMatierePremiere($aluminium);
 
-$etape33 = new EtapeFabrication();
-$etape33->setNom('Contrôle');
-$etape33->setOrdre(3);
-$etape33->setStatut('TERMINEE');
-$etape33->setOrdreFabrication($ordre3);
-$manager->persist($etape33);
-$ordre3->setNumero('OF-2026-003');
-$ordre3->setQuantite(25);
-$ordre3->setStatut('TERMINE');
-$ordre3->setDateCreation(new \DateTimeImmutable());
-$ordre3->setProduit($produit3);
-$ordre3->setUser($user);
+        $manager->persist($of3);
 
+        /*
+         * Étape 1 : Découpe terminée
+         */
+        $etape1Of3 = new EtapeFabrication();
+        $etape1Of3->setNom($typeDecoupe->getNom());
+        $etape1Of3->setOrdre(1);
+        $etape1Of3->setStatut('TERMINEE');
+        $etape1Of3->setDateDebut(
+            new \DateTimeImmutable('2026-10-03 09:00:00')
+        );
+        $etape1Of3->setDateFin(
+            new \DateTimeImmutable('2026-10-03 11:00:00')
+        );
+        $etape1Of3->setOrdreFabrication($of3);
+        $etape1Of3->setTypeEtape($typeDecoupe);
 
-$ordre->setUser($user);
-$ordre2->setUser($user);
-$ordre3->setUser($user);
+        $manager->persist($etape1Of3);
 
+        /*
+         * Étape 2 : Assemblage terminée
+         */
+        $etape2Of3 = new EtapeFabrication();
+        $etape2Of3->setNom($typeAssemblage->getNom());
+        $etape2Of3->setOrdre(2);
+        $etape2Of3->setStatut('TERMINEE');
+        $etape2Of3->setDateDebut(
+            new \DateTimeImmutable('2026-10-03 11:15:00')
+        );
+        $etape2Of3->setDateFin(
+            new \DateTimeImmutable('2026-10-03 14:00:00')
+        );
+        $etape2Of3->setOrdreFabrication($of3);
+        $etape2Of3->setTypeEtape($typeAssemblage);
 
+        $manager->persist($etape2Of3);
 
+        /*
+         * Étape 3 : Contrôle terminé
+         */
+        $etape3Of3 = new EtapeFabrication();
+        $etape3Of3->setNom($typeControle->getNom());
+        $etape3Of3->setOrdre(3);
+        $etape3Of3->setStatut('TERMINEE');
+        $etape3Of3->setDateDebut(
+            new \DateTimeImmutable('2026-10-03 14:15:00')
+        );
+        $etape3Of3->setDateFin(
+            new \DateTimeImmutable('2026-10-03 16:00:00')
+        );
+        $etape3Of3->setOrdreFabrication($of3);
+        $etape3Of3->setTypeEtape($typeControle);
 
-$manager->persist($ordre3);
+        $manager->persist($etape3Of3);
 
-
-
-        $manager->persist($acier);
-        $manager->persist($aluminium);
-        $manager->persist($plastique);
-        $manager->persist($produit1);
-        $manager->persist($produit2);
-        $manager->persist($produit3);
+        /*
+         * ============================================================
+         * ENREGISTREMENT
+         * ============================================================
+         */
 
         $manager->flush();
     }
