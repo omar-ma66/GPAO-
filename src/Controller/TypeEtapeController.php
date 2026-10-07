@@ -10,147 +10,120 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/type-etape')]
 class TypeEtapeController extends AbstractController
 {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private TypeEtapeRepository $typeEtapeRepository,
+    ) {
+    }
+
     #[Route('', name: 'app_type_etape', methods: ['GET'])]
-    public function index(
-        TypeEtapeRepository $repository
-    ): Response {
+    public function index(): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         return $this->render('type_etape/index.html.twig', [
-            'type_etapes' => $repository->findBy(
-                [],
-                ['nom' => 'ASC']
-            ),
+            'typesEtapes' => $this->typeEtapeRepository->findBy([], ['nom' => 'ASC']),
         ]);
     }
 
-    #[Route(
-        '/nouveau',
-        name: 'app_type_etape_new',
-        methods: ['GET', 'POST']
-    )]
-    #[IsGranted('ROLE_USER')]
-    public function new(
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): Response {
+    #[Route('/new', name: 'app_type_etape_new', methods: ['GET', 'POST'])]
+    public function new(Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         $typeEtape = new TypeEtape();
 
-        $form = $this->createForm(
-            TypeEtapeType::class,
-            $typeEtape
-        );
-
+        $form = $this->createForm(TypeEtapeType::class, $typeEtape);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            $entityManager->persist($typeEtape);
-            $entityManager->flush();
+            $this->entityManager->persist($typeEtape);
+            $this->entityManager->flush();
 
             $this->addFlash(
                 'success',
-                'L’étape de fabrication a été créée.'
+                'Type d’étape créé avec succès.'
             );
 
-            return $this->redirectToRoute(
-                'app_type_etape'
-            );
+            return $this->redirectToRoute('app_type_etape');
         }
 
         return $this->render('type_etape/new.html.twig', [
-            'type_etape' => $typeEtape,
+            'typeEtape' => $typeEtape,
             'form' => $form,
         ]);
     }
 
-    #[Route(
-        '/{id}/modifier',
-        name: 'app_type_etape_edit',
-        methods: ['GET', 'POST']
-    )]
-    #[IsGranted('ROLE_USER')]
-    public function edit(
-        Request $request,
-        TypeEtape $typeEtape,
-        EntityManagerInterface $entityManager
-    ): Response {
-        $form = $this->createForm(
-            TypeEtapeType::class,
-            $typeEtape
-        );
+    #[Route('/{id<\d+>}/edit', name: 'app_type_etape_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, int $id): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
 
+        $typeEtape = $this->typeEtapeRepository->find($id);
+
+        if (!$typeEtape) {
+            throw $this->createNotFoundException();
+        }
+
+        $form = $this->createForm(TypeEtapeType::class, $typeEtape);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            $entityManager->flush();
+            $this->entityManager->flush();
 
             $this->addFlash(
                 'success',
-                'L’étape de fabrication a été modifiée.'
+                'Type d’étape modifié avec succès.'
             );
 
-            return $this->redirectToRoute(
-                'app_type_etape'
-            );
+            return $this->redirectToRoute('app_type_etape');
         }
 
         return $this->render('type_etape/edit.html.twig', [
-            'type_etape' => $typeEtape,
+            'typeEtape' => $typeEtape,
             'form' => $form,
         ]);
     }
 
-    #[Route(
-        '/{id}/supprimer',
-        name: 'app_type_etape_delete',
-        methods: ['POST']
-    )]
-    #[IsGranted('ROLE_ADMIN')]
-    public function delete(
-        TypeEtape $typeEtape,
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): Response {
-        if (!$this->isCsrfTokenValid(
-            'supprimer_type_etape_' . $typeEtape->getId(),
-            $request->request->get('_token')
-        )) {
-            throw $this->createAccessDeniedException(
-                'Token CSRF invalide.'
-            );
+    #[Route('/{id<\d+>}/supprimer', name: 'app_type_etape_delete', methods: ['POST'])]
+    public function delete(Request $request, int $id): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $typeEtape = $this->typeEtapeRepository->find($id);
+
+        if (!$typeEtape) {
+            throw $this->createNotFoundException();
         }
 
-        /*
-         * On empêche la suppression d'une étape du catalogue
-         * déjà utilisée par un OF.
-         */
+        if (!$this->isCsrfTokenValid(
+            'supprimer_type_etape_' . $id,
+            $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
         if (!$typeEtape->getEtapeFabrications()->isEmpty()) {
             $this->addFlash(
                 'error',
-                'Cette étape ne peut pas être supprimée car elle est utilisée par un ou plusieurs ordres de fabrication.'
+                'Impossible de supprimer ce type d’étape car il est utilisé par un ou plusieurs ordres de fabrication.'
             );
 
-            return $this->redirectToRoute(
-                'app_type_etape'
-            );
+            return $this->redirectToRoute('app_type_etape');
         }
 
-        $entityManager->remove($typeEtape);
-        $entityManager->flush();
+        $this->entityManager->remove($typeEtape);
+        $this->entityManager->flush();
 
         $this->addFlash(
             'success',
-            'L’étape de fabrication a été supprimée.'
+            'Type d’étape supprimé avec succès.'
         );
 
-        return $this->redirectToRoute(
-            'app_type_etape'
-        );
+        return $this->redirectToRoute('app_type_etape');
     }
 }
-

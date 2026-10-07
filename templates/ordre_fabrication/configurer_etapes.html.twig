@@ -1,0 +1,312 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+Configurer les étapes - {{ ordre.numero }}
+{% endblock %}
+
+{% block body %}
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+```
+<div class="mb-8">
+    <a
+        href="{{ path('app_ordre_fabrication') }}"
+        class="text-sm text-slate-500 hover:text-slate-900"
+    >
+        ← Retour aux ordres de fabrication
+    </a>
+
+    <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">
+                Configurer les étapes
+            </h1>
+
+            <p class="mt-1 text-slate-600">
+                OF <strong>{{ ordre.numero }}</strong>
+                —
+                {{ ordre.produit.nom }}
+            </p>
+        </div>
+
+        <div>
+            <span class="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+                {{ ordre.statut }}
+            </span>
+        </div>
+    </div>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-green-800">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('error') %}
+    <div class="mb-4 rounded-lg bg-red-50 px-4 py-3 text-red-800">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% if etapesCommencees %}
+    <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+        <div class="font-semibold">
+            Configuration verrouillée
+        </div>
+
+        <p class="mt-1 text-sm">
+            Cet OF a déjà commencé.
+            Les étapes ne peuvent plus être ajoutées, supprimées ou réordonnées.
+        </p>
+    </div>
+{% endif %}
+
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+    <div class="rounded-2xl bg-white p-6 shadow-sm">
+        <div class="mb-5">
+            <h2 class="text-xl font-bold text-slate-900">
+                Étapes disponibles
+            </h2>
+
+            <p class="mt-1 text-sm text-slate-500">
+                Choisissez les étapes qui doivent être réalisées pour cet OF.
+            </p>
+        </div>
+
+        {% if typesEtapes is empty %}
+
+            <div class="rounded-xl bg-slate-50 p-5 text-center">
+                <p class="text-slate-600">
+                    Aucun type d’étape n’est encore configuré.
+                </p>
+
+                <a
+                    href="{{ path('app_type_etape_new') }}"
+                    class="mt-4 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                >
+                    Créer un type d’étape
+                </a>
+            </div>
+
+        {% else %}
+
+            <div class="space-y-3">
+
+                {% for typeEtape in typesEtapes %}
+
+                    <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4">
+
+                        <div class="min-w-0">
+                            <div class="font-semibold text-slate-900">
+                                {{ typeEtape.nom }}
+                            </div>
+
+                            {% if typeEtape.description %}
+                                <div class="mt-1 text-sm text-slate-500">
+                                    {{ typeEtape.description }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if not etapesCommencees %}
+
+                            <form
+                                method="post"
+                                action="{{ path('app_ordre_fabrication_etape_ajouter', {
+                                    id: ordre.id
+                                }) }}"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="_token"
+                                    value="{{ csrf_token('ajouter_etape_' ~ ordre.id) }}"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="type_etape_id"
+                                    value="{{ typeEtape.id }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="shrink-0 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                                >
+                                    Ajouter
+                                </button>
+                            </form>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+    </div>
+
+    <div class="rounded-2xl bg-white p-6 shadow-sm">
+
+        <div class="mb-5">
+            <h2 class="text-xl font-bold text-slate-900">
+                Étapes de cet OF
+            </h2>
+
+            <p class="mt-1 text-sm text-slate-500">
+                L’ordre ci-dessous correspond à l’ordre d’exécution.
+            </p>
+        </div>
+
+        {% if etapes is empty %}
+
+            <div class="rounded-xl border border-dashed border-slate-300 p-8 text-center">
+                <div class="text-lg font-semibold text-slate-700">
+                    Aucune étape sélectionnée
+                </div>
+
+                <p class="mt-2 text-sm text-slate-500">
+                    Ajoutez au moins une étape avant de démarrer cet OF.
+                </p>
+            </div>
+
+        {% else %}
+
+            <div class="space-y-3">
+
+                {% for etape in etapes %}
+
+                    <div class="flex items-center gap-3 rounded-xl border border-slate-200 p-4">
+
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 font-bold text-white">
+                            {{ etape.ordre }}
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+
+                            <div class="font-semibold text-slate-900">
+                                {{ etape.nom }}
+                            </div>
+
+                            {% if etape.typeEtape %}
+                                <div class="text-xs text-slate-500">
+                                    Type : {{ etape.typeEtape.nom }}
+                                </div>
+                            {% endif %}
+
+                            <div class="mt-1 text-xs text-slate-500">
+                                Statut : {{ etape.statut }}
+                            </div>
+
+                        </div>
+
+                        {% if not etapesCommencees %}
+
+                            <div class="flex shrink-0 items-center gap-2">
+
+                                {% if not loop.first %}
+                                    <form
+                                        method="post"
+                                        action="{{ path('app_ordre_fabrication_etape_monter', {
+                                            id: ordre.id,
+                                            etapeId: etape.id
+                                        }) }}"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="_token"
+                                            value="{{ csrf_token('deplacer_etape_' ~ etape.id) }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            title="Monter"
+                                            class="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+                                        >
+                                            ↑
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {% if not loop.last %}
+                                    <form
+                                        method="post"
+                                        action="{{ path('app_ordre_fabrication_etape_descendre', {
+                                            id: ordre.id,
+                                            etapeId: etape.id
+                                        }) }}"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="_token"
+                                            value="{{ csrf_token('deplacer_etape_' ~ etape.id) }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            title="Descendre"
+                                            class="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+                                        >
+                                            ↓
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                <form
+                                    method="post"
+                                    action="{{ path('app_ordre_fabrication_etape_supprimer', {
+                                        id: ordre.id,
+                                        etapeId: etape.id
+                                    }) }}"
+                                    onsubmit="return confirm('Supprimer cette étape de l’OF ?');"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="_token"
+                                        value="{{ csrf_token('supprimer_etape_' ~ etape.id) }}"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        title="Supprimer"
+                                        class="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                                    >
+                                        ✕
+                                    </button>
+                                </form>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+
+    <a
+        href="{{ path('app_ordre_fabrication') }}"
+        class="rounded-lg border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+    >
+        Retour au Kanban
+    </a>
+
+</div>
+```
+
+</div>
+
+{% endblock %}

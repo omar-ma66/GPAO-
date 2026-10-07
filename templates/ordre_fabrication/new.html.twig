@@ -4,46 +4,98 @@
 
 {% block body %}
 
-    <div class="max-w-2xl mx-auto px-4 py-8">
+<div class="max-w-3xl mx-auto px-4 py-8">
 
-        <h1 class="text-3xl font-bold mb-8">
-            Nouvel ordre de fabrication
-        </h1>
 
-        {{ form_start(form, {
-            attr: {
-                class: 'bg-white rounded-xl shadow p-6 space-y-6'
-            }
-        }) }}
+<div class="mb-8">
+    <a
+        href="{{ path('app_ordre_fabrication') }}"
+        class="text-sm text-slate-500 hover:text-slate-900"
+    >
+        ← Retour aux ordres de fabrication
+    </a>
 
-           
+    <h1 class="mt-4 text-3xl font-bold text-slate-900">
+        Nouvel ordre de fabrication
+    </h1>
 
-            {{ form_row(form.quantite) }}
+    <p class="mt-2 text-slate-600">
+        Créez un nouvel OF. Les étapes de fabrication seront configurées
+        juste après sa création.
+    </p>
+</div>
 
-            {{ form_row(form.statut) }}
+{% for message in app.flashes('error') %}
+    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+        {{ message }}
+    </div>
+{% endfor %}
 
-            {{ form_row(form.produit) }}
+<div class="rounded-2xl bg-white p-6 shadow-sm md:p-8">
 
-            <div class="flex gap-3">
+    {{ form_start(form) }}
 
-                <button
-                    type="submit"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                    Créer l'ordre
-                </button>
+        {{ form_errors(form) }}
 
-                <a
-                    href="{{ path('app_ordre_fabrication') }}"
-                    class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-                >
-                    Annuler
-                </a>
+        <div class="space-y-6">
 
+            <div>
+                {{ form_label(form.quantite, null, {
+                    label_attr: {
+                        class: 'mb-2 block text-sm font-semibold text-slate-700'
+                    }
+                }) }}
+
+                {{ form_widget(form.quantite, {
+                    attr: {
+                        class: 'w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200'
+                    }
+                }) }}
+
+                {{ form_errors(form.quantite) }}
             </div>
 
-        {{ form_end(form) }}
+            <div>
+                {{ form_label(form.produit, null, {
+                    label_attr: {
+                        class: 'mb-2 block text-sm font-semibold text-slate-700'
+                    }
+                }) }}
 
-    </div>
+                {{ form_widget(form.produit, {
+                    attr: {
+                        class: 'w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200'
+                    }
+                }) }}
+
+                {{ form_errors(form.produit) }}
+            </div>
+
+        </div>
+
+        <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+            <a
+                href="{{ path('app_ordre_fabrication') }}"
+                class="rounded-lg border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+                Annuler
+            </a>
+
+            <button
+                type="submit"
+                class="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700"
+            >
+                Créer l'OF et configurer les étapes
+            </button>
+
+        </div>
+
+    {{ form_end(form) }}
+
+</div>
+
+
+</div>
 
 {% endblock %}
