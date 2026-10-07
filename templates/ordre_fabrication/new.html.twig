@@ -35,13 +35,18 @@
 
 {% endfor %}
 
-<div class="rounded-2xl bg-white p-6 shadow-sm md:p-8">
+<div
+    class="rounded-2xl bg-white p-6 shadow-sm md:p-8"
+    data-controller="matieres-premieres"
+>
 
     {{ form_start(form) }}
 
     {{ form_errors(form) }}
 
     <div class="space-y-6">
+
+        <!-- QUANTITE -->
 
         <div>
 
@@ -61,6 +66,8 @@
 
         </div>
 
+        <!-- PRODUIT -->
+
         <div>
 
             {{ form_label(form.produit, null, {
@@ -71,7 +78,9 @@
 
             {{ form_widget(form.produit, {
                 attr: {
-                    class: 'w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200'
+                    class: 'w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200',
+                    'data-matieres-premieres-target': 'produit',
+                    'data-action': 'change->matieres-premieres#produitChange'
                 }
             }) }}
 
@@ -79,25 +88,51 @@
 
         </div>
 
+        <!-- MATIERES PREMIERES -->
+
         <div>
 
-            <div class="mb-3">
+            {{ form_label(form.matieresPremieres, null, {
+                label_attr: {
+                    class: 'mb-3 block text-sm font-semibold text-slate-700'
+                }
+            }) }}
 
-                {{ form_label(form.matieresPremieres, null, {
-                    label_attr: {
-                        class: 'block text-sm font-semibold text-slate-700'
-                    }
-                }) }}
+            <p class="mb-3 text-sm text-slate-500">
+                Seules les matières premières associées au produit
+                sélectionné sont proposées.
+            </p>
 
-                <p class="mt-1 text-sm text-slate-500">
-                    Sélectionnez les matières premières utilisées pour cet OF.
-                </p>
-
+            <div
+                data-matieres-premieres-target="message"
+                class="mb-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600"
+            >
+                Sélectionnez d’abord un produit pour afficher les matières
+                premières disponibles.
             </div>
 
-            <div class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
 
-                {{ form_widget(form.matieresPremieres) }}
+                {% for matiereField in form.matieresPremieres %}
+
+                    <label
+                        data-matieres-premieres-target="option"
+                        class="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 hover:bg-slate-50"
+                    >
+
+                        {{ form_widget(matiereField, {
+                            attr: {
+                                class: 'h-4 w-4 rounded border-slate-300'
+                            }
+                        }) }}
+
+                        <span class="text-sm font-medium text-slate-700">
+                            {{ matiereField.vars.label }}
+                        </span>
+
+                    </label>
+
+                {% endfor %}
 
             </div>
 

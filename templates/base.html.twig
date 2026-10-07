@@ -1,393 +1,298 @@
 <!DOCTYPE html>
 
-<html>
-    <head>
-        <meta charset="UTF-8">
+<html lang="fr">
 
+<head>
 
-    <title>
-        {% block title %}GPAO{% endblock %}
-    </title>
+```
+<meta charset="UTF-8">
 
-    <link
-        rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    {% block stylesheets %}
-        <link
-            rel="stylesheet"
-            href="{{ asset('styles/app.css') }}"
-        >
-    {% endblock %}
+<title>
+    {% block title %}GPAO{% endblock %}
+</title>
 
-    {% block javascripts %}
-        {% block importmap %}
-            {{ importmap('app') }}
-        {% endblock %}
-    {% endblock %}
+{% block stylesheets %}
+{% endblock %}
 
-    {% set frankenphp_hot_reload =
-        app.request.server.get('FRANKENPHP_HOT_RELOAD')
-    %}
-
-    {% if frankenphp_hot_reload %}
-
-        <meta
-            name="frankenphp-hot-reload:url"
-            content="{{ frankenphp_hot_reload }}"
-        >
-
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-
-        <script
-            src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm"
-            type="module"
-        ></script>
-
-    {% endif %}
+{% block javascripts %}
+    {{ importmap('app') }}
+{% endblock %}
+```
 
 </head>
 
-<body class="bg-gray-100 text-gray-900">
+<body class="min-h-screen bg-slate-100 text-slate-900">
 
-    {# ====================================================== #}
-    {# NAVBAR                                                   #}
-    {# ====================================================== #}
+<nav class="border-b border-slate-200 bg-white shadow-sm">
 
-    <nav class="border-b border-gray-200 bg-white shadow-sm">
+```
+<div class="mx-auto max-w-7xl px-4">
 
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
 
-            <div class="flex h-16 items-center justify-between">
+        <!-- LOGO -->
 
-                {# Logo #}
-                <a
-                    href="{{ path('app_ordre_fabrication') }}"
-                    class="flex items-center gap-3"
-                >
+        <a
+            href="{{ path('app_ordre_fabrication') }}"
+            class="flex items-center gap-2 text-xl font-bold text-slate-900"
+        >
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm text-white">
+                GP
+            </span>
 
-                    <div
-                        class="flex h-10 w-10 items-center
-                               justify-center rounded-lg
-                               bg-blue-600 text-lg font-bold
-                               text-white shadow-sm"
-                    >
-                        G
-                    </div>
+            <span>
+                GPAO
+            </span>
+        </a>
 
-                    <span
-                        class="text-xl font-bold tracking-tight
-                               text-gray-900"
-                    >
-                        GPAO
-                    </span>
+        <!-- MENU DESKTOP -->
 
-                </a>
+        <div class="hidden items-center gap-1 md:flex">
 
-
-                {# ================================================== #}
-                {# MENU DESKTOP                                         #}
-                {# ================================================== #}
-
-                <div class="hidden items-center gap-1 md:flex">
-
-                    <a
-                        href="{{ path('app_ordre_fabrication') }}"
-                        class="rounded-lg px-4 py-2 text-sm
-                               font-semibold text-gray-700
-                               transition hover:bg-blue-50
-                               hover:text-blue-700"
-                    >
-                        Ordres de fabrication
-                    </a>
-
-                    <a
-                        href="{{ path('app_produit') }}"
-                        class="rounded-lg px-4 py-2 text-sm
-                               font-semibold text-gray-700
-                               transition hover:bg-blue-50
-                               hover:text-blue-700"
-                    >
-                        Produits
-                    </a>
-
-                    <a
-                        href="{{ path('app_matiere_premiere') }}"
-                        class="rounded-lg px-4 py-2 text-sm
-                               font-semibold text-gray-700
-                               transition hover:bg-blue-50
-                               hover:text-blue-700"
-                    >
-                        Matières premières
-                    </a>
-
-                </div>
-
-
-                {# ================================================== #}
-                {# UTILISATEUR DESKTOP                                  #}
-                {# ================================================== #}
-
-                <div class="hidden items-center gap-4 md:flex">
-
-                    {% if app.user %}
-
-                        <div class="text-right">
-
-                            <div class="text-sm font-semibold text-gray-800">
-                                {{ app.user.userIdentifier }}
-                            </div>
-
-                            {% if is_granted('ROLE_ADMIN') %}
-
-                                <span
-                                    class="text-xs font-semibold
-                                           text-red-600"
-                                >
-                                    Administrateur
-                                </span>
-
-                            {% else %}
-
-                                <span
-                                    class="text-xs font-semibold
-                                           text-gray-500"
-                                >
-                                    Utilisateur
-                                </span>
-
-                            {% endif %}
-
-                        </div>
-
-                        <a
-                            href="{{ path('app_logout') }}"
-                            class="rounded-lg bg-gray-100 px-4 py-2
-                                   text-sm font-semibold text-gray-700
-                                   transition hover:bg-gray-200"
-                        >
-                            Déconnexion
-                        </a>
-
-                    {% else %}
-
-                        <a
-                            href="{{ path('app_login') }}"
-                            class="rounded-lg bg-blue-600 px-4 py-2
-                                   text-sm font-semibold text-white
-                                   transition hover:bg-blue-700"
-                        >
-                            Connexion
-                        </a>
-
-                    {% endif %}
-
-                </div>
-
-
-                {# ================================================== #}
-                {# BOUTON MOBILE                                         #}
-                {# ================================================== #}
-
-                <button
-                    id="menu-mobile-button"
-                    type="button"
-                    class="inline-flex items-center justify-center
-                           rounded-lg p-2 text-gray-600
-                           hover:bg-gray-100 hover:text-gray-900
-                           md:hidden"
-                    aria-controls="menu-mobile"
-                    aria-expanded="false"
-                    aria-label="Ouvrir le menu"
-                >
-
-                    <svg
-                        class="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"
-                        />
-                    </svg>
-
-                </button>
-
-            </div>
-
-
-            {# ================================================== #}
-            {# MENU MOBILE                                            #}
-            {# ================================================== #}
-
-            <div
-                id="menu-mobile"
-                class="hidden border-t border-gray-100 py-4 md:hidden"
+            <a
+                href="{{ path('app_ordre_fabrication') }}"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
+                Ordres de fabrication
+            </a>
 
-                <div class="flex flex-col gap-1">
+            <a
+                href="{{ path('app_ordre_fabrication_archives') }}"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Archives
+            </a>
 
-                    <a
-                        href="{{ path('app_ordre_fabrication') }}"
-                        class="rounded-lg px-4 py-3 text-sm
-                               font-semibold text-gray-700
-                               hover:bg-blue-50 hover:text-blue-700"
-                    >
-                        Ordres de fabrication
-                    </a>
+            <a
+                href="{{ path('app_produit') }}"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Produits
+            </a>
 
-                    <a
-                        href="{{ path('app_produit') }}"
-                        class="rounded-lg px-4 py-3 text-sm
-                               font-semibold text-gray-700
-                               hover:bg-blue-50 hover:text-blue-700"
-                    >
-                        Produits
-                    </a>
+            <a
+                href="{{ path('app_matiere_premiere') }}"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Matières premières
+            </a>
 
-                    <a
-                        href="{{ path('app_matiere_premiere') }}"
-                        class="rounded-lg px-4 py-3 text-sm
-                               font-semibold text-gray-700
-                               hover:bg-blue-50 hover:text-blue-700"
-                    >
-                        Matières premières
-                    </a>
-
-                    <div class="my-2 border-t border-gray-100"></div>
-
-                    {% if app.user %}
-
-                        <div class="px-4 py-2">
-
-                            <div class="text-sm font-semibold text-gray-800">
-                                {{ app.user.userIdentifier }}
-                            </div>
-
-                            {% if is_granted('ROLE_ADMIN') %}
-
-                                <div class="text-xs font-semibold text-red-600">
-                                    Administrateur
-                                </div>
-
-                            {% else %}
-
-                                <div class="text-xs font-semibold text-gray-500">
-                                    Utilisateur
-                                </div>
-
-                            {% endif %}
-
-                        </div>
-
-                        <a
-                            href="{{ path('app_logout') }}"
-                            class="rounded-lg px-4 py-3 text-sm
-                                   font-semibold text-gray-700
-                                   hover:bg-gray-100"
-                        >
-                            Déconnexion
-                        </a>
-
-                    {% else %}
-
-                        <a
-                            href="{{ path('app_login') }}"
-                            class="rounded-lg bg-blue-600 px-4 py-3
-                                   text-center text-sm font-semibold
-                                   text-white hover:bg-blue-700"
-                        >
-                            Connexion
-                        </a>
-
-                    {% endif %}
-
-                </div>
-
-            </div>
+            <a
+                href="{{ path('app_type_etape') }}"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Étapes de fabrication
+            </a>
 
         </div>
 
-    </nav>
+        <!-- UTILISATEUR DESKTOP -->
 
+        <div class="hidden items-center gap-3 md:flex">
 
-    {# ====================================================== #}
-    {# CONTENU                                                   #}
-    {# ====================================================== #}
+            {% if app.user %}
 
-    <main>
-        {% block body %}{% endblock %}
-    </main>
+                <span class="text-sm text-slate-600">
+                    {{ app.user.userIdentifier }}
+                </span>
 
+                {% if is_granted('ROLE_ADMIN') %}
 
-    {# ====================================================== #}
-    {# MENU MOBILE JAVASCRIPT                                     #}
-    {# ====================================================== #}
+                    <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
+                        ADMIN
+                    </span>
 
-    <script>
-        (function () {
+                {% endif %}
 
-            function initMobileMenu() {
+                <a
+                    href="{{ path('app_logout') }}"
+                    class="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                    Déconnexion
+                </a>
 
-                const menuButton =
-                    document.getElementById('menu-mobile-button');
+            {% else %}
 
-                const mobileMenu =
-                    document.getElementById('menu-mobile');
+                <a
+                    href="{{ path('app_login') }}"
+                    class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                >
+                    Connexion
+                </a>
 
-                if (!menuButton || !mobileMenu) {
-                    return;
-                }
+            {% endif %}
 
-                if (
-                    menuButton.dataset.menuInitialized === 'true'
-                ) {
-                    return;
-                }
+        </div>
 
-                menuButton.dataset.menuInitialized = 'true';
+        <!-- BOUTON MOBILE -->
 
-                menuButton.addEventListener(
-                    'click',
-                    function () {
+        <button
+            id="menu-mobile-button"
+            type="button"
+            aria-label="Ouvrir le menu"
+            aria-expanded="false"
+            aria-controls="menu-mobile"
+            class="rounded-lg p-2 text-slate-700 hover:bg-slate-100 md:hidden"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                />
+            </svg>
+        </button>
 
-                        mobileMenu.classList.toggle('hidden');
+    </div>
 
-                        const isOpen =
-                            !mobileMenu.classList.contains('hidden');
+    <!-- MENU MOBILE -->
 
-                        menuButton.setAttribute(
-                            'aria-expanded',
-                            isOpen ? 'true' : 'false'
-                        );
+    <div
+        id="menu-mobile"
+        class="hidden border-t border-slate-200 py-4 md:hidden"
+    >
 
-                    }
-                );
+        <div class="flex flex-col gap-1">
 
-            }
+            <a
+                href="{{ path('app_ordre_fabrication') }}"
+                class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Ordres de fabrication
+            </a>
 
-            if (document.readyState === 'loading') {
+            <a
+                href="{{ path('app_ordre_fabrication_archives') }}"
+                class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Archives
+            </a>
 
-                document.addEventListener(
-                    'DOMContentLoaded',
-                    initMobileMenu
-                );
+            <a
+                href="{{ path('app_produit') }}"
+                class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Produits
+            </a>
 
-            } else {
+            <a
+                href="{{ path('app_matiere_premiere') }}"
+                class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Matières premières
+            </a>
 
-                initMobileMenu();
+            <a
+                href="{{ path('app_type_etape') }}"
+                class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+                Étapes de fabrication
+            </a>
 
-            }
+        </div>
 
-        })();
-    </script>
+        <div class="mt-4 border-t border-slate-200 pt-4">
+
+            {% if app.user %}
+
+                <div class="mb-3 px-3 text-sm text-slate-600">
+                    {{ app.user.userIdentifier }}
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <span class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-xs font-semibold text-white">
+                            ADMIN
+                        </span>
+                    {% endif %}
+                </div>
+
+                <a
+                    href="{{ path('app_logout') }}"
+                    class="block rounded-lg px-3 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                    Déconnexion
+                </a>
+
+            {% else %}
+
+                <a
+                    href="{{ path('app_login') }}"
+                    class="block rounded-lg bg-slate-900 px-3 py-3 text-center text-sm font-semibold text-white hover:bg-slate-700"
+                >
+                    Connexion
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</nav>
+
+<main>
+
+```
+{% block body %}
+{% endblock %}
+```
+
+</main>
+
+<script>
+(function () {
+    function initMobileMenu() {
+        const menuButton = document.getElementById('menu-mobile-button');
+        const mobileMenu = document.getElementById('menu-mobile');
+
+        if (!menuButton || !mobileMenu) {
+            return;
+        }
+
+        if (menuButton.dataset.menuInitialized === 'true') {
+            return;
+        }
+
+        menuButton.dataset.menuInitialized = 'true';
+
+        menuButton.addEventListener('click', function () {
+            mobileMenu.classList.toggle('hidden');
+
+            const isOpen =
+                !mobileMenu.classList.contains('hidden');
+
+            menuButton.setAttribute(
+                'aria-expanded',
+                isOpen ? 'true' : 'false'
+            );
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener(
+            'DOMContentLoaded',
+            initMobileMenu
+        );
+    } else {
+        initMobileMenu();
+    }
+})();
+</script>
 
 </body>
-
 
 </html>

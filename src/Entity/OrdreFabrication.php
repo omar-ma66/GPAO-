@@ -33,6 +33,9 @@ class OrdreFabrication
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $dateFin = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $dateArchivage = null;
+
     #[ORM\ManyToOne(
         targetEntity: Produit::class,
         inversedBy: 'ordreFabrications'
@@ -150,6 +153,19 @@ class OrdreFabrication
         return $this;
     }
 
+    public function getDateArchivage(): ?\DateTimeImmutable
+    {
+        return $this->dateArchivage;
+    }
+
+    public function setDateArchivage(
+        ?\DateTimeImmutable $dateArchivage
+    ): static {
+        $this->dateArchivage = $dateArchivage;
+
+        return $this;
+    }
+
     public function getProduit(): ?Produit
     {
         return $this->produit;
@@ -207,6 +223,17 @@ class OrdreFabrication
     public function getMatieresPremieres(): Collection
     {
         return $this->matieresPremieres;
+    }
+
+    /**
+     * @param Collection<int, MatierePremiere> $matieresPremieres
+     */
+    public function setMatieresPremieres(
+        Collection $matieresPremieres
+    ): static {
+        $this->matieresPremieres = $matieresPremieres;
+
+        return $this;
     }
 
     public function addMatierePremiere(

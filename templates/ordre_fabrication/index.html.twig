@@ -4,6 +4,7 @@
 
 {% macro carte_ordre(ordre) %}
 
+
 <div
     class="rounded-xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md cursor-grab active:cursor-grabbing"
     draggable="true"
@@ -155,29 +156,29 @@
 
         {% endif %}
 
-        {% if is_granted('DELETE', ordre) %}
+        {% if ordre.statut == 'TERMINE' and ordre.dateArchivage is null %}
 
             <form
                 method="post"
-                action="{{ path('app_ordre_fabrication_delete', {
+                action="{{ path('app_ordre_fabrication_archiver', {
                     id: ordre.id
                 }) }}"
                 class="inline"
                 onclick="event.stopPropagation();"
-                onsubmit="event.stopPropagation(); return confirm('Voulez-vous vraiment supprimer cet ordre de fabrication ?');"
+                onsubmit="event.stopPropagation(); return confirm('Voulez-vous archiver cet ordre de fabrication ?');"
             >
 
                 <input
                     type="hidden"
                     name="_token"
-                    value="{{ csrf_token('supprimer_' ~ ordre.id) }}"
+                    value="{{ csrf_token('archiver_' ~ ordre.id) }}"
                 >
 
                 <button
                     type="submit"
-                    class="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                    class="rounded-lg border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50"
                 >
-                    Supprimer
+                    Archiver
                 </button>
 
             </form>
@@ -187,6 +188,7 @@
     </div>
 
 </div>
+
 
 {% endmacro %}
 
@@ -201,6 +203,7 @@
 <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
     <div>
+
         <h1 class="text-3xl font-bold text-slate-900">
             Ordres de fabrication
         </h1>
@@ -208,6 +211,7 @@
         <p class="mt-1 text-slate-600">
             Suivez l’avancement de votre production.
         </p>
+
     </div>
 
     <a
@@ -220,18 +224,24 @@
 </div>
 
 {% for message in app.flashes('success') %}
+
     <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800">
         {{ message }}
     </div>
+
 {% endfor %}
 
 {% for message in app.flashes('error') %}
+
     <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
         {{ message }}
     </div>
+
 {% endfor %}
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+    <!-- EN ATTENTE -->
 
     <div
         class="min-h-[300px] rounded-2xl bg-slate-100 p-4"
@@ -240,19 +250,27 @@
     >
 
         <div class="mb-4 flex items-center justify-between">
+
             <h2 class="font-bold text-slate-800">
                 En attente
             </h2>
 
             <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+
                 {% set count = 0 %}
+
                 {% for ordre in ordres %}
+
                     {% if ordre.statut == 'EN_ATTENTE' %}
                         {% set count = count + 1 %}
                     {% endif %}
+
                 {% endfor %}
+
                 {{ count }}
+
             </span>
+
         </div>
 
         <div class="space-y-4">
@@ -269,6 +287,8 @@
 
     </div>
 
+    <!-- EN COURS -->
+
     <div
         class="min-h-[300px] rounded-2xl bg-blue-50 p-4"
         data-statut="EN_COURS"
@@ -282,13 +302,19 @@
             </h2>
 
             <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+
                 {% set count = 0 %}
+
                 {% for ordre in ordres %}
+
                     {% if ordre.statut == 'EN_COURS' %}
                         {% set count = count + 1 %}
                     {% endif %}
+
                 {% endfor %}
+
                 {{ count }}
+
             </span>
 
         </div>
@@ -307,6 +333,8 @@
 
     </div>
 
+    <!-- TERMINE -->
+
     <div
         class="min-h-[300px] rounded-2xl bg-green-50 p-4"
         data-statut="TERMINE"
@@ -320,13 +348,19 @@
             </h2>
 
             <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+
                 {% set count = 0 %}
+
                 {% for ordre in ordres %}
+
                     {% if ordre.statut == 'TERMINE' %}
                         {% set count = count + 1 %}
                     {% endif %}
+
                 {% endfor %}
+
                 {{ count }}
+
             </span>
 
         </div>

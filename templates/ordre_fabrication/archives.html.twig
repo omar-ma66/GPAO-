@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Archives des ordres de fabrication{% endblock %}
+
+{% block body %}
+
+<div class="mx-auto max-w-7xl px-4 py-8">
+
+```
+<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+    <div>
+        <h1 class="text-3xl font-bold text-slate-900">
+            Archives
+        </h1>
+
+        <p class="mt-1 text-slate-600">
+            Consultez les ordres de fabrication terminés et archivés.
+        </p>
+    </div>
+
+    <a
+        href="{{ path('app_ordre_fabrication') }}"
+        class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+    >
+        ← Retour au Kanban
+    </a>
+
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('error') %}
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% if ordres is empty %}
+
+    <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+
+        <h2 class="text-xl font-semibold text-slate-800">
+            Aucune archive
+        </h2>
+
+        <p class="mt-2 text-slate-500">
+            Aucun ordre de fabrication n’a encore été archivé.
+        </p>
+
+    </div>
+
+{% else %}
+
+    <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+
+        <div class="overflow-x-auto">
+
+            <table class="min-w-full divide-y divide-slate-200">
+
+                <thead class="bg-slate-50">
+
+                    <tr>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            OF
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Produit
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Quantité
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Terminé le
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Archivé le
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody class="divide-y divide-slate-200">
+
+                    {% for ordre in ordres %}
+
+                        <tr class="hover:bg-slate-50">
+
+                            <td class="px-6 py-4 font-semibold text-slate-900">
+                                {{ ordre.numero }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ ordre.produit.nom }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ ordre.quantite }}
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                {% if ordre.dateFin %}
+                                    {{ ordre.dateFin|date('d/m/Y H:i') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                {% if ordre.dateArchivage %}
+                                    {{ ordre.dateArchivage|date('d/m/Y H:i') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+{% endif %}
+```
+
+</div>
+
+{% endblock %}
