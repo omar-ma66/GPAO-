@@ -1,0 +1,516 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ordres de fabrication{% endblock %}
+
+{% block body %}
+
+<div
+    class="mx-auto max-w-7xl px-4 py-8"
+    data-controller="kanban"
+>
+
+    {# ============================================================ #}
+    {# EN-TÊTE #}
+    {# ============================================================ #}
+
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">
+                Ordres de fabrication
+            </h1>
+
+            <p class="mt-1 text-slate-600">
+                Suivez et gérez l'ensemble de vos ordres de fabrication.
+            </p>
+        </div>
+
+        <a
+            href="{{ path('app_ordre_fabrication_new') }}"
+            class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700"
+        >
+            + Nouvel OF
+        </a>
+
+    </div>
+
+    {# ============================================================ #}
+    {# MESSAGES FLASH #}
+    {# ============================================================ #}
+
+    {% for message in app.flashes('success') %}
+        <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {# ============================================================ #}
+    {# FILTRES #}
+    {# ============================================================ #}
+
+    <div class="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+            <div class="md:col-span-2">
+                <label
+                    for="recherche-of"
+                    class="mb-1 block text-sm font-semibold text-slate-700"
+                >
+                    Rechercher
+                </label>
+
+                <input
+                    id="recherche-of"
+                    type="search"
+                    placeholder="N° OF ou nom du produit..."
+                    class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                >
+            </div>
+
+            <div>
+                <label
+                    for="filtre-statut"
+                    class="mb-1 block text-sm font-semibold text-slate-700"
+                >
+                    Statut
+                </label>
+
+                <select
+                    id="filtre-statut"
+                    class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                >
+                    <option value="TOUS">Tous les statuts</option>
+                    <option value="EN_ATTENTE">En attente</option>
+                    <option value="EN_COURS">En cours</option>
+                    <option value="TERMINE">Terminé</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+            <span id="resultat-of">
+                {{ ordres|length }} OF
+            </span>
+
+            <button
+                type="button"
+                id="reset-filtres-of"
+                class="font-semibold text-slate-700 hover:text-slate-900"
+            >
+                Réinitialiser les filtres
+            </button>
+        </div>
+
+    </div>
+
+    {# ============================================================ #}
+    {# TABLEAU #}
+    {# ============================================================ #}
+
+    <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+
+        <div class="overflow-x-auto">
+
+            <table class="min-w-full divide-y divide-slate-200">
+
+                <thead class="bg-slate-50">
+                    <tr>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            N° OF
+                        </th>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Produit
+                        </th>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Étapes
+                        </th>
+
+                        <th class="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Quantité
+                        </th>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Statut
+                        </th>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Création
+                        </th>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Début
+                        </th>
+
+                        <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Fin
+                        </th>
+
+                        <th class="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Actions
+                        </th>
+
+                    </tr>
+                </thead>
+
+                <tbody id="tableau-of" class="divide-y divide-slate-100">
+
+                    {% for ordre in ordres %}
+
+                        <tr
+                            class="ligne-of transition hover:bg-slate-50"
+                            data-statut="{{ ordre.statut }}"
+                            data-recherche="{{ (ordre.numero ~ ' ' ~ ordre.produit.nom)|lower }}"
+                        >
+
+                            {# N° OF #}
+                            <td class="whitespace-nowrap px-4 py-4">
+                                <div class="font-bold text-slate-900">
+                                    {{ ordre.numero }}
+                                </div>
+                            </td>
+
+                            {# Produit #}
+                            <td class="px-4 py-4">
+                                <div class="font-semibold text-slate-800">
+                                    {{ ordre.produit.nom }}
+                                </div>
+
+                                {% if ordre.produit.reference is defined and ordre.produit.reference %}
+                                    <div class="mt-1 text-xs text-slate-500">
+                                        {{ ordre.produit.reference }}
+                                    </div>
+                                {% endif %}
+
+                                {% set etapes = ordre.etapeFabrications|sort((a, b) => a.ordre <=> b.ordre) %}
+                                {% if etapes is not empty %}
+                                    <div class="mt-2 text-xs text-slate-500">
+                                        {{ etapes|length }} étape{{ etapes|length > 1 ? 's' : '' }}
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            {# Étapes #}
+                            <td class="min-w-[260px] px-4 py-4">
+                                {% set etapes = ordre.etapeFabrications|sort((a, b) => a.ordre <=> b.ordre) %}
+
+                                {% if etapes is empty %}
+                                    <span class="text-xs text-slate-400">Aucune étape</span>
+                                {% else %}
+                                    <div class="space-y-2">
+                                        {% for etape in etapes %}
+                                            {% if is_granted('EDIT', ordre) and ordre.dateArchivage is null %}
+                                                <form
+                                                    method="post"
+                                                    action="{{ path('app_ordre_fabrication_etape_statut', { id: ordre.id, etapeId: etape.id }) }}"
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('modifier_etape') }}">
+                                                    <span class="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700">
+                                                        {{ etape.ordre }}. {{ etape.nom }}
+                                                    </span>
+                                                    <select
+                                                        name="statut"
+                                                        class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+                                                        onchange="this.form.submit()"
+                                                    >
+                                                        <option value="A_FAIRE" {{ etape.statut == 'A_FAIRE' ? 'selected' : '' }}>À faire</option>
+                                                        <option value="EN_COURS" {{ etape.statut == 'EN_COURS' ? 'selected' : '' }}>En cours</option>
+                                                        <option value="TERMINEE" {{ etape.statut == 'TERMINEE' ? 'selected' : '' }}>Terminée</option>
+                                                    </select>
+                                                </form>
+                                            {% else %}
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <span class="min-w-0 truncate text-xs font-semibold text-slate-700">
+                                                        {{ etape.ordre }}. {{ etape.nom }}
+                                                    </span>
+                                                    <span class="shrink-0 text-xs text-slate-500">{{ etape.statut }}</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            {# Quantité #}
+                            <td class="whitespace-nowrap px-4 py-4 text-right font-semibold text-slate-700">
+                                {{ ordre.quantite }}
+                            </td>
+
+                            {# Statut #}
+                            <td class="whitespace-nowrap px-4 py-4">
+
+                                {% if is_granted('EDIT', ordre) and ordre.dateArchivage is null %}
+                                    <form
+                                        method="post"
+                                        action="{{ path('app_ordre_fabrication_kanban_statut', { id: ordre.id }) }}"
+                                        class="inline-flex js-statut-of"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="_token"
+                                            value="{{ csrf_token('kanban_statut') }}"
+                                        >
+
+                                        <select
+                                            name="statut"
+                                            class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200
+                                                {% if ordre.statut == 'EN_ATTENTE' %}bg-amber-100 text-amber-700
+                                                {% elseif ordre.statut == 'EN_COURS' %}bg-blue-100 text-blue-700
+                                                {% elseif ordre.statut == 'TERMINE' %}bg-green-100 text-green-700
+                                                {% else %}bg-slate-100 text-slate-700{% endif %}"
+                                            onchange="this.form.submit()"
+                                        >
+                                            <option value="EN_ATTENTE" {{ ordre.statut == 'EN_ATTENTE' ? 'selected' : '' }}>En attente</option>
+                                            <option value="EN_COURS" {{ ordre.statut == 'EN_COURS' ? 'selected' : '' }}>En cours</option>
+                                            <option value="TERMINE" {{ ordre.statut == 'TERMINE' ? 'selected' : '' }}>Terminé</option>
+                                        </select>
+                                    </form>
+                                {% else %}
+                                    {% if ordre.statut == 'EN_ATTENTE' %}
+                                        <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">En attente</span>
+                                    {% elseif ordre.statut == 'EN_COURS' %}
+                                        <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">En cours</span>
+                                    {% elseif ordre.statut == 'TERMINE' %}
+                                        <span class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Terminé</span>
+                                    {% else %}
+                                        <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{{ ordre.statut }}</span>
+                                    {% endif %}
+                                {% endif %}
+
+                            </td>
+
+                            {# Date création #}
+                            <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                                {{ ordre.dateCreation|date('d/m/Y H:i') }}
+                            </td>
+
+                            {# Date début #}
+                            <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                                {% if ordre.dateDebut %}
+                                    {{ ordre.dateDebut|date('d/m/Y H:i') }}
+                                {% else %}
+                                    <span class="text-slate-400">—</span>
+                                {% endif %}
+                            </td>
+
+                            {# Date fin #}
+                            <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                                {% if ordre.dateFin %}
+                                    {{ ordre.dateFin|date('d/m/Y H:i') }}
+                                {% else %}
+                                    <span class="text-slate-400">—</span>
+                                {% endif %}
+                            </td>
+
+                            {# Actions #}
+                            <td class="px-4 py-4">
+
+                                <div class="flex flex-wrap justify-end gap-2">
+
+                                    {% if is_granted('EDIT', ordre) %}
+
+                                        <a
+                                            href="{{ path('app_ordre_fabrication_configurer_etapes', { id: ordre.id }) }}"
+                                            class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                        >
+                                            Étapes
+                                        </a>
+
+                                        <a
+                                            href="{{ path('app_ordre_fabrication_edit', { id: ordre.id }) }}"
+                                            class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                        >
+                                            Modifier
+                                        </a>
+
+                                    {% endif %}
+
+                                    {% if ordre.statut == 'EN_ATTENTE' and ordre.dateArchivage is null and is_granted('EDIT', ordre) %}
+
+                                        <form
+                                            method="post"
+                                            action="{{ path('app_ordre_fabrication_supprimer', { id: ordre.id }) }}"
+                                            onsubmit="return confirm('Voulez-vous vraiment supprimer cet ordre de fabrication ?');"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="_token"
+                                                value="{{ csrf_token('supprimer_' ~ ordre.id) }}"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </form>
+
+                                    {% endif %}
+
+                                    {% if ordre.statut == 'TERMINE' and ordre.dateArchivage is null and is_granted('EDIT', ordre) %}
+
+                                        <form
+                                            method="post"
+                                            action="{{ path('app_ordre_fabrication_archiver', { id: ordre.id }) }}"
+                                            onsubmit="return confirm('Voulez-vous archiver cet ordre de fabrication ?');"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="_token"
+                                                value="{{ csrf_token('archiver_' ~ ordre.id) }}"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="rounded-lg border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+                                            >
+                                                Archiver
+                                            </button>
+                                        </form>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr id="aucun-of">
+                            <td
+                                colspan="9"
+                                class="px-4 py-12 text-center"
+                            >
+                                <div class="text-lg font-semibold text-slate-700">
+                                    Aucun ordre de fabrication
+                                </div>
+
+                                <div class="mt-1 text-sm text-slate-500">
+                                    Créez votre premier OF avec le bouton « + Nouvel OF ».
+                                </div>
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {# Message affiché lorsque les filtres ne trouvent rien #}
+        <div
+            id="aucun-resultat-filtre"
+            class="hidden px-4 py-12 text-center"
+        >
+            <div class="text-lg font-semibold text-slate-700">
+                Aucun OF ne correspond à votre recherche.
+            </div>
+
+            <div class="mt-1 text-sm text-slate-500">
+                Essayez de modifier le texte recherché ou le statut sélectionné.
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const recherche = document.getElementById('recherche-of');
+        const filtreStatut = document.getElementById('filtre-statut');
+        const reset = document.getElementById('reset-filtres-of');
+        const resultat = document.getElementById('resultat-of');
+        const aucunResultat = document.getElementById('aucun-resultat-filtre');
+        const lignes = Array.from(document.querySelectorAll('.ligne-of'));
+
+        function filtrer() {
+            const texte = recherche.value.trim().toLowerCase();
+            const statut = filtreStatut.value;
+            let nombreVisible = 0;
+
+            lignes.forEach(function (ligne) {
+                const correspondRecherche =
+                    texte === '' || ligne.dataset.recherche.includes(texte);
+
+                const correspondStatut =
+                    statut === 'TOUS' || ligne.dataset.statut === statut;
+
+                const visible = correspondRecherche && correspondStatut;
+
+                ligne.classList.toggle('hidden', !visible);
+
+                if (visible) {
+                    nombreVisible++;
+                }
+            });
+
+            resultat.textContent = nombreVisible + ' OF';
+            aucunResultat.classList.toggle('hidden', nombreVisible !== 0);
+        }
+
+        document.querySelectorAll('.js-statut-of').forEach(function (form) {
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                const select = form.querySelector('select[name="statut"]');
+                const statutAvant = select ? select.dataset.previousValue : null;
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Impossible de modifier le statut de l'OF.');
+                    }
+
+                    window.location.reload();
+                } catch (error) {
+                    if (select && statutAvant !== null) {
+                        select.value = statutAvant;
+                    }
+                    alert(error.message);
+                }
+            });
+
+            const select = form.querySelector('select[name="statut"]');
+            if (select) {
+                select.dataset.previousValue = select.value;
+            }
+        });
+
+        recherche.addEventListener('input', filtrer);
+        filtreStatut.addEventListener('change', filtrer);
+
+        reset.addEventListener('click', function () {
+            recherche.value = '';
+            filtreStatut.value = 'TOUS';
+            filtrer();
+        });
+    });
+</script>
+
+{% endblock %}

@@ -2,413 +2,995 @@
 
 {% block title %}Ordres de fabrication{% endblock %}
 
-{% macro carte_ordre(ordre) %}
-
-
-<div
-    class="rounded-xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md cursor-grab active:cursor-grabbing"
-    draggable="true"
-    data-action="
-        click->kanban#selectionner
-        dragstart->kanban#dragStart
-        dragend->kanban#dragEnd
-    "
-    data-id="{{ ordre.id }}"
-    data-numero="{{ ordre.numero }}"
-    data-csrf-token="{{ csrf_token('kanban_statut') }}"
->
-
-    <div class="flex items-start justify-between gap-3">
-
-        <div>
-            <div class="text-lg font-bold text-slate-900">
-                {{ ordre.numero }}
-            </div>
-
-            <div class="mt-1 text-sm text-slate-600">
-                {{ ordre.produit.nom }}
-            </div>
-        </div>
-
-        <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-            {{ ordre.quantite }} unités
-        </div>
-
-    </div>
-
-    <div class="mt-4 space-y-2">
-
-        {% set etapes = ordre.etapeFabrications|sort((a, b) => a.ordre <=> b.ordre) %}
-
-        {% if etapes is empty %}
-
-            <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500">
-                Aucune étape configurée.
-            </div>
-
-        {% else %}
-
-            {% for etape in etapes %}
-
-                <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-
-                    <div class="flex items-center justify-between gap-3">
-
-                        <div class="flex min-w-0 items-center gap-2">
-
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                                {{ etape.ordre }}
-                            </span>
-
-                            <span class="truncate text-sm font-semibold text-slate-800">
-                                {{ etape.nom }}
-                            </span>
-
-                        </div>
-
-                        <span class="shrink-0 text-xs font-semibold text-slate-500">
-                            {{ etape.statut }}
-                        </span>
-
-                    </div>
-
-                    {% if is_granted('EDIT', ordre) %}
-
-                        <form
-                            method="post"
-                            action="{{ path('app_ordre_fabrication_etape_statut', {
-                                id: ordre.id,
-                                etapeId: etape.id
-                            }) }}"
-                            class="mt-3"
-                        >
-
-                            <input
-                                type="hidden"
-                                name="_token"
-                                value="{{ csrf_token('modifier_etape') }}"
-                            >
-
-                            <select
-                                name="statut"
-                                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                                onchange="this.form.submit()"
-                            >
-
-                                <option
-                                    value="A_FAIRE"
-                                    {{ etape.statut == 'A_FAIRE' ? 'selected' : '' }}
-                                >
-                                    À faire
-                                </option>
-
-                                <option
-                                    value="EN_COURS"
-                                    {{ etape.statut == 'EN_COURS' ? 'selected' : '' }}
-                                >
-                                    En cours
-                                </option>
-
-                                <option
-                                    value="TERMINEE"
-                                    {{ etape.statut == 'TERMINEE' ? 'selected' : '' }}
-                                >
-                                    Terminée
-                                </option>
-
-                            </select>
-
-                        </form>
-
-                    {% endif %}
-
-                </div>
-
-            {% endfor %}
-
-        {% endif %}
-
-    </div>
-
-    <div class="mt-5 flex flex-wrap gap-2">
-
-        {% if is_granted('EDIT', ordre) %}
-
-            <a
-                href="{{ path('app_ordre_fabrication_configurer_etapes', {
-                    id: ordre.id
-                }) }}"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                onclick="event.stopPropagation();"
-            >
-                Étapes
-            </a>
-
-            <a
-                href="{{ path('app_ordre_fabrication_edit', {
-                    id: ordre.id
-                }) }}"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                onclick="event.stopPropagation();"
-            >
-                Modifier
-            </a>
-
-            {% if ordre.statut == 'EN_ATTENTE' and ordre.dateArchivage is null %}
-                <form
-                    method="post"
-                    action="{{ path('app_ordre_fabrication_supprimer', {
-                        id: ordre.id
-                    }) }}"
-                    class="inline"
-                    onclick="event.stopPropagation();"
-                    onsubmit="event.stopPropagation(); return confirm('Voulez-vous vraiment supprimer cet ordre de fabrication ? Cette action est irréversible.');"
-                >
-
-                    <input
-                        type="hidden"
-                        name="_token"
-                        value="{{ csrf_token('supprimer_' ~ ordre.id) }}"
-                    >
-
-                    <button
-                        type="submit"
-                        class="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-                    >
-                        Supprimer
-                    </button>
-
-                </form>
-            {% endif %}
-
-        {% endif %}
-
-        {% if ordre.statut == 'TERMINE' and ordre.dateArchivage is null %}
-
-            <form
-                method="post"
-                action="{{ path('app_ordre_fabrication_archiver', {
-                    id: ordre.id
-                }) }}"
-                class="inline"
-                onclick="event.stopPropagation();"
-                onsubmit="event.stopPropagation(); return confirm('Voulez-vous archiver cet ordre de fabrication ?');"
-            >
-
-                <input
-                    type="hidden"
-                    name="_token"
-                    value="{{ csrf_token('archiver_' ~ ordre.id) }}"
-                >
-
-                <button
-                    type="submit"
-                    class="rounded-lg border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50"
-                >
-                    Archiver
-                </button>
-
-            </form>
-
-        {% endif %}
-
-    </div>
-
-</div>
-
-
-{% endmacro %}
-
 {% block body %}
 
 <div
-    class="mx-auto max-w-7xl px-4 py-8"
+    class="mx-auto max-w-7xl px-3 py-4"
     data-controller="kanban"
 >
 
+    {# ============================================================ #}
+    {# EN-TÊTE #}
+    {# ============================================================ #}
 
-<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mb-4 flex items-center justify-between gap-3">
 
-    <div>
+        <div>
+            <h1 class="text-xl font-bold text-slate-900">
+                Ordres de fabrication
+            </h1>
 
-        <h1 class="text-3xl font-bold text-slate-900">
-            Ordres de fabrication
-        </h1>
+            <p class="text-xs text-slate-500">
+                Suivez l’avancement de votre production.
+            </p>
+        </div>
 
-        <p class="mt-1 text-slate-600">
-            Suivez l’avancement de votre production.
-        </p>
+        <a
+            href="{{ path('app_ordre_fabrication_new') }}"
+            class="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+        >
+            + Nouvel OF
+        </a>
 
     </div>
 
-    <a
-        href="{{ path('app_ordre_fabrication_new') }}"
-        class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700"
-    >
-        + Nouvel OF
-    </a>
 
-</div>
+    {# ============================================================ #}
+    {# MESSAGES FLASH #}
+    {# ============================================================ #}
 
-{% for message in app.flashes('success') %}
+    {% for message in app.flashes('success') %}
+        <div class="mb-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+            {{ message }}
+        </div>
+    {% endfor %}
 
-    <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800">
-        {{ message }}
+    {% for message in app.flashes('error') %}
+        <div class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+
+    {# ============================================================ #}
+    {# RECHERCHE OF #}
+    {# ============================================================ #}
+
+    <div class="mb-4 flex items-center gap-2">
+
+        <div class="relative flex-1">
+
+            <input
+                id="recherche-of"
+                type="search"
+                placeholder="Rechercher un numéro d’OF..."
+                autocomplete="off"
+                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-300"
+            >
+
+        </div>
+
+        <span
+            id="resultat-of"
+            class="shrink-0 text-xs font-semibold text-slate-500"
+        >
+            {{ ordres|length }} OF
+        </span>
+
+        <button
+            type="button"
+            id="reset-recherche-of"
+            class="hidden shrink-0 rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+        >
+            Effacer
+        </button>
+
     </div>
 
-{% endfor %}
 
-{% for message in app.flashes('error') %}
+    {# ============================================================ #}
+    {# KANBAN : EN ATTENTE #}
+    {# ============================================================ #}
 
-    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-        {{ message }}
-    </div>
+    <section class="mb-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
 
-{% endfor %}
+        <div class="flex items-center justify-between border-b border-slate-200 bg-amber-50 px-3 py-2">
 
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="flex items-center gap-2">
 
-    <!-- EN ATTENTE -->
+                <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
 
-    <div
-        class="min-h-[300px] rounded-2xl bg-slate-100 p-4"
-        data-statut="EN_ATTENTE"
-        data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
-    >
+                <h2 class="text-sm font-bold text-amber-800">
+                    En attente
+                </h2>
 
-        <div class="mb-4 flex items-center justify-between">
+            </div>
 
-            <h2 class="font-bold text-slate-800">
-                En attente
-            </h2>
-
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-
-                {% set count = 0 %}
-
+            <span
+                id="compteur-en-attente"
+                class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+            >
+                {% set compteurAttente = 0 %}
                 {% for ordre in ordres %}
-
                     {% if ordre.statut == 'EN_ATTENTE' %}
-                        {% set count = count + 1 %}
+                        {% set compteurAttente = compteurAttente + 1 %}
                     {% endif %}
-
                 {% endfor %}
-
-                {{ count }}
-
+                {{ compteurAttente }}
             </span>
 
         </div>
 
-        <div class="space-y-4">
+        <div
+            class="max-h-64 overflow-auto"
+            data-statut="EN_ATTENTE"
+            data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
+        >
 
-            {% for ordre in ordres %}
+            <table class="w-full min-w-[900px] text-xs">
 
-                {% if ordre.statut == 'EN_ATTENTE' %}
-                    {{ _self.carte_ordre(ordre) }}
-                {% endif %}
+                <thead class="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase text-slate-500">
 
-            {% endfor %}
+                    <tr>
+
+                        <th class="w-28 px-2 py-1.5 text-left">
+                            OF
+                        </th>
+
+                        <th class="w-40 px-2 py-1.5 text-left">
+                            Produit
+                        </th>
+
+                        <th class="w-16 px-2 py-1.5 text-center">
+                            Qté
+                        </th>
+
+                        <th class="px-2 py-1.5 text-left">
+                            Étapes
+                        </th>
+
+                        <th class="w-40 px-2 py-1.5 text-right">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+
+                    {% set aucuneAttente = true %}
+
+                    {% for ordre in ordres %}
+
+                        {% if ordre.statut == 'EN_ATTENTE' %}
+
+                            {% set aucuneAttente = false %}
+
+                            <tr
+                                class="ligne-of cursor-grab transition hover:bg-slate-50 active:cursor-grabbing"
+                                draggable="true"
+                                data-id="{{ ordre.id }}"
+                                data-numero="{{ ordre.numero }}"
+                                data-recherche="{{ ordre.numero|lower }}"
+                                data-csrf-token="{{ csrf_token('kanban_statut') }}"
+                                data-action="
+                                    click->kanban#selectionner
+                                    dragstart->kanban#dragStart
+                                    dragend->kanban#dragEnd
+                                "
+                            >
+
+                                <td class="whitespace-nowrap px-2 py-1.5 font-bold text-slate-900">
+                                    {{ ordre.numero }}
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    <div class="font-semibold text-slate-800">
+                                        {{ ordre.produit.nom }}
+                                    </div>
+
+                                    {% if ordre.produit.reference is defined and ordre.produit.reference %}
+                                        <div class="text-[10px] text-slate-400">
+                                            {{ ordre.produit.reference }}
+                                        </div>
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="whitespace-nowrap px-2 py-1.5 text-center font-semibold text-slate-700">
+                                    {{ ordre.quantite }}
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    {% set etapes = ordre.etapeFabrications|sort((a, b) => a.ordre <=> b.ordre) %}
+
+                                    {% if etapes is empty %}
+
+                                        <span class="text-[10px] italic text-slate-400">
+                                            Aucune étape
+                                        </span>
+
+                                    {% else %}
+
+                                        <div class="flex items-center gap-1 whitespace-nowrap">
+
+                                            {% for etape in etapes %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{{ path('app_ordre_fabrication_etape_statut', {
+                                                        id: ordre.id,
+                                                        etapeId: etape.id
+                                                    }) }}"
+                                                    class="flex items-center gap-1"
+                                                    onclick="event.stopPropagation();"
+                                                >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="_token"
+                                                        value="{{ csrf_token('modifier_etape') }}"
+                                                    >
+
+                                                    <span
+                                                        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[9px] font-bold text-white"
+                                                        title="{{ etape.nom }}"
+                                                    >
+                                                        {{ etape.ordre }}
+                                                    </span>
+
+                                                    {% if is_granted('EDIT', ordre) %}
+
+                                                        <select
+                                                            name="statut"
+                                                            title="{{ etape.nom }}"
+                                                            class="w-24 rounded border border-slate-300 bg-white px-1 py-0.5 text-[10px]"
+                                                            onchange="event.stopPropagation(); this.form.submit()"
+                                                        >
+
+                                                            <option
+                                                                value="A_FAIRE"
+                                                                {{ etape.statut == 'A_FAIRE' ? 'selected' : '' }}
+                                                            >
+                                                                À faire
+                                                            </option>
+
+                                                            <option
+                                                                value="EN_COURS"
+                                                                {{ etape.statut == 'EN_COURS' ? 'selected' : '' }}
+                                                            >
+                                                                En cours
+                                                            </option>
+
+                                                            <option
+                                                                value="TERMINEE"
+                                                                {{ etape.statut == 'TERMINEE' ? 'selected' : '' }}
+                                                            >
+                                                                Terminée
+                                                            </option>
+
+                                                        </select>
+
+                                                    {% else %}
+
+                                                        <span
+                                                            class="max-w-24 truncate text-[10px] text-slate-500"
+                                                            title="{{ etape.nom }}"
+                                                        >
+                                                            {{ etape.nom }}
+                                                        </span>
+
+                                                    {% endif %}
+
+                                                </form>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    <div
+                                        class="flex justify-end gap-1"
+                                        onclick="event.stopPropagation();"
+                                    >
+
+                                        {% if is_granted('EDIT', ordre) %}
+
+                                            <a
+                                                href="{{ path('app_ordre_fabrication_configurer_etapes', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                class="rounded border border-slate-300 px-1.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Étapes
+                                            </a>
+
+                                            <a
+                                                href="{{ path('app_ordre_fabrication_edit', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                class="rounded border border-slate-300 px-1.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Modifier
+                                            </a>
+
+                                            <form
+                                                method="post"
+                                                action="{{ path('app_ordre_fabrication_supprimer', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                onsubmit="return confirm('Voulez-vous vraiment supprimer cet ordre de fabrication ? Cette action est irréversible.');"
+                                            >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="_token"
+                                                    value="{{ csrf_token('supprimer_' ~ ordre.id) }}"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    class="rounded border border-red-200 px-1.5 py-1 text-[10px] font-semibold text-red-700 hover:bg-red-50"
+                                                >
+                                                    Supprimer
+                                                </button>
+
+                                            </form>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                    {% if aucuneAttente %}
+
+                        <tr class="ligne-vide-attente">
+
+                            <td
+                                colspan="5"
+                                class="px-3 py-4 text-center text-[10px] italic text-slate-400"
+                            >
+                                Aucun OF en attente.
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
 
         </div>
 
-    </div>
+    </section>
 
-    <!-- EN COURS -->
 
-    <div
-        class="min-h-[300px] rounded-2xl bg-blue-50 p-4"
-        data-statut="EN_COURS"
-        data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
-    >
+    {# ============================================================ #}
+    {# KANBAN : EN COURS #}
+    {# ============================================================ #}
 
-        <div class="mb-4 flex items-center justify-between">
+    <section class="mb-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
 
-            <h2 class="font-bold text-slate-800">
-                En cours
-            </h2>
+        <div class="flex items-center justify-between border-b border-slate-200 bg-blue-50 px-3 py-2">
 
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+            <div class="flex items-center gap-2">
 
-                {% set count = 0 %}
+                <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+
+                <h2 class="text-sm font-bold text-blue-800">
+                    En cours
+                </h2>
+
+            </div>
+
+            <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+
+                {% set compteurCours = 0 %}
 
                 {% for ordre in ordres %}
 
                     {% if ordre.statut == 'EN_COURS' %}
-                        {% set count = count + 1 %}
+                        {% set compteurCours = compteurCours + 1 %}
                     {% endif %}
 
                 {% endfor %}
 
-                {{ count }}
+                {{ compteurCours }}
 
             </span>
 
         </div>
 
-        <div class="space-y-4">
+        <div
+            class="max-h-64 overflow-auto"
+            data-statut="EN_COURS"
+            data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
+        >
 
-            {% for ordre in ordres %}
+            <table class="w-full min-w-[900px] text-xs">
 
-                {% if ordre.statut == 'EN_COURS' %}
-                    {{ _self.carte_ordre(ordre) }}
-                {% endif %}
+                <thead class="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase text-slate-500">
 
-            {% endfor %}
+                    <tr>
+
+                        <th class="w-28 px-2 py-1.5 text-left">
+                            OF
+                        </th>
+
+                        <th class="w-40 px-2 py-1.5 text-left">
+                            Produit
+                        </th>
+
+                        <th class="w-16 px-2 py-1.5 text-center">
+                            Qté
+                        </th>
+
+                        <th class="px-2 py-1.5 text-left">
+                            Étapes
+                        </th>
+
+                        <th class="w-40 px-2 py-1.5 text-right">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+
+                    {% set aucuneCours = true %}
+
+                    {% for ordre in ordres %}
+
+                        {% if ordre.statut == 'EN_COURS' %}
+
+                            {% set aucuneCours = false %}
+
+                            <tr
+                                class="ligne-of cursor-grab transition hover:bg-slate-50 active:cursor-grabbing"
+                                draggable="true"
+                                data-id="{{ ordre.id }}"
+                                data-numero="{{ ordre.numero }}"
+                                data-recherche="{{ ordre.numero|lower }}"
+                                data-csrf-token="{{ csrf_token('kanban_statut') }}"
+                                data-action="
+                                    click->kanban#selectionner
+                                    dragstart->kanban#dragStart
+                                    dragend->kanban#dragEnd
+                                "
+                            >
+
+                                <td class="whitespace-nowrap px-2 py-1.5 font-bold text-slate-900">
+                                    {{ ordre.numero }}
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    <div class="font-semibold text-slate-800">
+                                        {{ ordre.produit.nom }}
+                                    </div>
+
+                                    {% if ordre.produit.reference is defined and ordre.produit.reference %}
+                                        <div class="text-[10px] text-slate-400">
+                                            {{ ordre.produit.reference }}
+                                        </div>
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="whitespace-nowrap px-2 py-1.5 text-center font-semibold text-slate-700">
+                                    {{ ordre.quantite }}
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    {% set etapes = ordre.etapeFabrications|sort((a, b) => a.ordre <=> b.ordre) %}
+
+                                    {% if etapes is empty %}
+
+                                        <span class="text-[10px] italic text-slate-400">
+                                            Aucune étape
+                                        </span>
+
+                                    {% else %}
+
+                                        <div class="flex items-center gap-1 whitespace-nowrap">
+
+                                            {% for etape in etapes %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{{ path('app_ordre_fabrication_etape_statut', {
+                                                        id: ordre.id,
+                                                        etapeId: etape.id
+                                                    }) }}"
+                                                    class="flex items-center gap-1"
+                                                    onclick="event.stopPropagation();"
+                                                >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="_token"
+                                                        value="{{ csrf_token('modifier_etape') }}"
+                                                    >
+
+                                                    <span
+                                                        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[9px] font-bold text-white"
+                                                        title="{{ etape.nom }}"
+                                                    >
+                                                        {{ etape.ordre }}
+                                                    </span>
+
+                                                    {% if is_granted('EDIT', ordre) %}
+
+                                                        <select
+                                                            name="statut"
+                                                            title="{{ etape.nom }}"
+                                                            class="w-24 rounded border border-slate-300 bg-white px-1 py-0.5 text-[10px]"
+                                                            onchange="event.stopPropagation(); this.form.submit()"
+                                                        >
+
+                                                            <option
+                                                                value="A_FAIRE"
+                                                                {{ etape.statut == 'A_FAIRE' ? 'selected' : '' }}
+                                                            >
+                                                                À faire
+                                                            </option>
+
+                                                            <option
+                                                                value="EN_COURS"
+                                                                {{ etape.statut == 'EN_COURS' ? 'selected' : '' }}
+                                                            >
+                                                                En cours
+                                                            </option>
+
+                                                            <option
+                                                                value="TERMINEE"
+                                                                {{ etape.statut == 'TERMINEE' ? 'selected' : '' }}
+                                                            >
+                                                                Terminée
+                                                            </option>
+
+                                                        </select>
+
+                                                    {% else %}
+
+                                                        <span
+                                                            class="max-w-24 truncate text-[10px] text-slate-500"
+                                                            title="{{ etape.nom }}"
+                                                        >
+                                                            {{ etape.nom }}
+                                                        </span>
+
+                                                    {% endif %}
+
+                                                </form>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    <div
+                                        class="flex justify-end gap-1"
+                                        onclick="event.stopPropagation();"
+                                    >
+
+                                        {% if is_granted('EDIT', ordre) %}
+
+                                            <a
+                                                href="{{ path('app_ordre_fabrication_configurer_etapes', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                class="rounded border border-slate-300 px-1.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Étapes
+                                            </a>
+
+                                            <a
+                                                href="{{ path('app_ordre_fabrication_edit', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                class="rounded border border-slate-300 px-1.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Modifier
+                                            </a>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                    {% if aucuneCours %}
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="px-3 py-4 text-center text-[10px] italic text-slate-400"
+                            >
+                                Aucun OF en cours.
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
 
         </div>
 
-    </div>
+    </section>
 
-    <!-- TERMINE -->
 
-    <div
-        class="min-h-[300px] rounded-2xl bg-green-50 p-4"
-        data-statut="TERMINE"
-        data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
-    >
+    {# ============================================================ #}
+    {# KANBAN : TERMINE #}
+    {# ============================================================ #}
 
-        <div class="mb-4 flex items-center justify-between">
+    <section class="mb-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
 
-            <h2 class="font-bold text-slate-800">
-                Terminés
-            </h2>
+        <div class="flex items-center justify-between border-b border-slate-200 bg-green-50 px-3 py-2">
 
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+            <div class="flex items-center gap-2">
 
-                {% set count = 0 %}
+                <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+
+                <h2 class="text-sm font-bold text-green-800">
+                    Terminé
+                </h2>
+
+            </div>
+
+            <span class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700">
+
+                {% set compteurTermine = 0 %}
 
                 {% for ordre in ordres %}
 
                     {% if ordre.statut == 'TERMINE' %}
-                        {% set count = count + 1 %}
+                        {% set compteurTermine = compteurTermine + 1 %}
                     {% endif %}
 
                 {% endfor %}
 
-                {{ count }}
+                {{ compteurTermine }}
 
             </span>
 
         </div>
 
-        <div class="space-y-4">
+        <div
+            class="max-h-64 overflow-auto"
+            data-statut="TERMINE"
+            data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
+        >
 
-            {% for ordre in ordres %}
+            <table class="w-full min-w-[900px] text-xs">
 
-                {% if ordre.statut == 'TERMINE' %}
-                    {{ _self.carte_ordre(ordre) }}
-                {% endif %}
+                <thead class="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase text-slate-500">
 
-            {% endfor %}
+                    <tr>
+
+                        <th class="w-28 px-2 py-1.5 text-left">
+                            OF
+                        </th>
+
+                        <th class="w-40 px-2 py-1.5 text-left">
+                            Produit
+                        </th>
+
+                        <th class="w-16 px-2 py-1.5 text-center">
+                            Qté
+                        </th>
+
+                        <th class="px-2 py-1.5 text-left">
+                            Étapes
+                        </th>
+
+                        <th class="w-40 px-2 py-1.5 text-right">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+
+                    {% set aucuneTermine = true %}
+
+                    {% for ordre in ordres %}
+
+                        {% if ordre.statut == 'TERMINE' %}
+
+                            {% set aucuneTermine = false %}
+
+                            <tr
+                                class="ligne-of cursor-grab transition hover:bg-slate-50 active:cursor-grabbing"
+                                draggable="true"
+                                data-id="{{ ordre.id }}"
+                                data-numero="{{ ordre.numero }}"
+                                data-recherche="{{ ordre.numero|lower }}"
+                                data-csrf-token="{{ csrf_token('kanban_statut') }}"
+                                data-action="
+                                    click->kanban#selectionner
+                                    dragstart->kanban#dragStart
+                                    dragend->kanban#dragEnd
+                                "
+                            >
+
+                                <td class="whitespace-nowrap px-2 py-1.5 font-bold text-slate-900">
+                                    {{ ordre.numero }}
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    <div class="font-semibold text-slate-800">
+                                        {{ ordre.produit.nom }}
+                                    </div>
+
+                                    {% if ordre.produit.reference is defined and ordre.produit.reference %}
+                                        <div class="text-[10px] text-slate-400">
+                                            {{ ordre.produit.reference }}
+                                        </div>
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="whitespace-nowrap px-2 py-1.5 text-center font-semibold text-slate-700">
+                                    {{ ordre.quantite }}
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    {% set etapes = ordre.etapeFabrications|sort((a, b) => a.ordre <=> b.ordre) %}
+
+                                    {% if etapes is empty %}
+
+                                        <span class="text-[10px] italic text-slate-400">
+                                            Aucune étape
+                                        </span>
+
+                                    {% else %}
+
+                                        <div class="flex items-center gap-1 whitespace-nowrap">
+
+                                            {% for etape in etapes %}
+
+                                                <span
+                                                    class="flex h-5 items-center gap-1 rounded bg-green-50 px-1.5 text-[10px] font-semibold text-green-700"
+                                                    title="{{ etape.nom }}"
+                                                >
+                                                    <span class="font-bold">
+                                                        {{ etape.ordre }}
+                                                    </span>
+                                                    {{ etape.nom }}
+                                                </span>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="px-2 py-1.5">
+
+                                    <div
+                                        class="flex justify-end gap-1"
+                                        onclick="event.stopPropagation();"
+                                    >
+
+                                        {% if is_granted('EDIT', ordre) %}
+
+                                            <a
+                                                href="{{ path('app_ordre_fabrication_configurer_etapes', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                class="rounded border border-slate-300 px-1.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Étapes
+                                            </a>
+
+                                            <a
+                                                href="{{ path('app_ordre_fabrication_edit', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                class="rounded border border-slate-300 px-1.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Modifier
+                                            </a>
+
+                                        {% endif %}
+
+                                        {% if ordre.statut == 'TERMINE' and ordre.dateArchivage is null %}
+
+                                            <form
+                                                method="post"
+                                                action="{{ path('app_ordre_fabrication_archiver', {
+                                                    id: ordre.id
+                                                }) }}"
+                                                onsubmit="return confirm('Voulez-vous archiver cet ordre de fabrication ?');"
+                                            >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="_token"
+                                                    value="{{ csrf_token('archiver_' ~ ordre.id) }}"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    class="rounded border border-amber-200 px-1.5 py-1 text-[10px] font-semibold text-amber-700 hover:bg-amber-50"
+                                                >
+                                                    Archiver
+                                                </button>
+
+                                            </form>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                    {% if aucuneTermine %}
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="px-3 py-4 text-center text-[10px] italic text-slate-400"
+                            >
+                                Aucun OF terminé.
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
 
         </div>
 
+    </section>
+
+
+    {# ============================================================ #}
+    {# AUCUN RÉSULTAT DE RECHERCHE #}
+    {# ============================================================ #}
+
+    <div
+        id="aucun-resultat-recherche"
+        class="hidden rounded-lg border border-slate-200 bg-white px-3 py-4 text-center text-xs text-slate-500"
+    >
+        Aucun OF ne correspond à votre recherche.
     </div>
 
 </div>
 
 
-</div>
+{# ================================================================ #}
+{# RECHERCHE PAR NUMÉRO D'OF                                       #}
+{# ================================================================ #}
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const recherche = document.getElementById('recherche-of');
+        const resultat = document.getElementById('resultat-of');
+        const reset = document.getElementById('reset-recherche-of');
+        const aucunResultat = document.getElementById('aucun-resultat-recherche');
+
+        const lignes = Array.from(
+            document.querySelectorAll('.ligne-of')
+        );
+
+        function filtrerOF() {
+
+            const texte = recherche.value
+                .trim()
+                .toLowerCase();
+
+            let nombreVisible = 0;
+
+            lignes.forEach(function (ligne) {
+
+                const numero = (
+                    ligne.dataset.recherche || ''
+                ).toLowerCase();
+
+                const visible =
+                    texte === ''
+                    || numero.includes(texte);
+
+                ligne.classList.toggle(
+                    'hidden',
+                    !visible
+                );
+
+                if (visible) {
+                    nombreVisible++;
+                }
+
+            });
+
+            resultat.textContent =
+                nombreVisible + ' OF';
+
+            reset.classList.toggle(
+                'hidden',
+                texte === ''
+            );
+
+            aucunResultat.classList.toggle(
+                'hidden',
+                nombreVisible !== 0
+            );
+
+        }
+
+        recherche.addEventListener(
+            'input',
+            filtrerOF
+        );
+
+        reset.addEventListener(
+            'click',
+            function () {
+
+                recherche.value = '';
+
+                filtrerOF();
+
+                recherche.focus();
+
+            }
+        );
+
+    });
+
+</script>
 
 {% endblock %}
