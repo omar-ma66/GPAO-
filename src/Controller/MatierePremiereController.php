@@ -16,9 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class MatierePremiereController extends AbstractController
 {
     #[Route('', name: 'app_matiere_premiere', methods: ['GET'])]
-    public function index(
-        MatierePremiereRepository $repository
-    ): Response {
+    public function index(MatierePremiereRepository $repository): Response {
         $matieres = $repository->findAll();
 
         return $this->render('matiere_premiere/index.html.twig', [
@@ -26,22 +24,12 @@ class MatierePremiereController extends AbstractController
         ]);
     }
 
-    #[Route(
-        '/nouveau',
-        name: 'app_matiere_premiere_new',
-        methods: ['GET', 'POST']
-    )]
+    #[Route('/nouveau',name: 'app_matiere_premiere_new',methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
-    public function new(
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): Response {
+    public function new( Request $request, EntityManagerInterface $entityManager): Response {
         $matiere = new MatierePremiere();
 
-        $form = $this->createForm(
-            MatierePremiereType::class,
-            $matiere
-        );
+        $form = $this->createForm(MatierePremiereType::class,$matiere);
 
         $form->handleRequest($request);
 
@@ -50,39 +38,24 @@ class MatierePremiereController extends AbstractController
             $entityManager->persist($matiere);
             $entityManager->flush();
 
-            $this->addFlash(
-                'success',
-                'Matière première créée avec succès.'
-            );
+            $this->addFlash('success','Matière première créée avec succès.');
 
             return $this->redirectToRoute(
                 'app_matiere_premiere'
             );
         }
 
-        return $this->render(
-            'matiere_premiere/new.html.twig',
+        return $this->render('matiere_premiere/new.html.twig',
             [
                 'form' => $form,
             ]
         );
     }
 
-    #[Route(
-        '/{id}/modifier',
-        name: 'app_matiere_premiere_edit',
-        methods: ['GET', 'POST']
-    )]
+    #[Route('/{id}/modifier',name: 'app_matiere_premiere_edit',methods: ['GET', 'POST'] )]
     #[IsGranted('ROLE_USER')]
-    public function edit(
-        MatierePremiere $matiere,
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): Response {
-        $form = $this->createForm(
-            MatierePremiereType::class,
-            $matiere
-        );
+    public function edit(MatierePremiere $matiere, Request $request, EntityManagerInterface $entityManager): Response {
+        $form = $this->createForm( MatierePremiereType::class, $matiere );
 
         $form->handleRequest($request);
 
@@ -90,18 +63,12 @@ class MatierePremiereController extends AbstractController
 
             $entityManager->flush();
 
-            $this->addFlash(
-                'success',
-                'Matière première modifiée avec succès.'
-            );
+            $this->addFlash('success','Matière première modifiée avec succès.');
 
-            return $this->redirectToRoute(
-                'app_matiere_premiere'
-            );
+            return $this->redirectToRoute('app_matiere_premiere');
         }
 
-        return $this->render(
-            'matiere_premiere/edit.html.twig',
+        return $this->render('matiere_premiere/edit.html.twig',
             [
                 'matiere' => $matiere,
                 'form' => $form,
@@ -109,21 +76,10 @@ class MatierePremiereController extends AbstractController
         );
     }
 
-    #[Route(
-        '/{id}/supprimer',
-        name: 'app_matiere_premiere_delete',
-        methods: ['POST']
-    )]
+    #[Route( '/{id}/supprimer', name: 'app_matiere_premiere_delete', methods: ['POST'] )]
     #[IsGranted('ROLE_ADMIN')]
-    public function delete(
-        MatierePremiere $matiere,
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): Response {
-        if (!$this->isCsrfTokenValid(
-            'supprimer_matiere_premiere',
-            $request->request->get('_token')
-        )) {
+    public function delete( MatierePremiere $matiere,Request $request, EntityManagerInterface $entityManager): Response {
+        if (!$this->isCsrfTokenValid('supprimer_matiere_premiere', $request->request->get('_token') )) {
             throw $this->createAccessDeniedException(
                 'Token CSRF invalide.'
             );
@@ -132,13 +88,9 @@ class MatierePremiereController extends AbstractController
         $entityManager->remove($matiere);
         $entityManager->flush();
 
-        $this->addFlash(
-            'success',
-            'Matière première supprimée avec succès.'
+        $this->addFlash( 'success','Matière première supprimée avec succès.'
         );
 
-        return $this->redirectToRoute(
-            'app_matiere_premiere'
-        );
+        return $this->redirectToRoute( 'app_matiere_premiere' );
     }
 }

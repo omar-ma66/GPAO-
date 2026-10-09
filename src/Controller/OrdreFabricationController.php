@@ -21,13 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/ordre/fabrication')]
 class OrdreFabricationController extends AbstractController
 {
-    public function __construct(
-        private EntityManagerInterface $entityManager,
-        private OrdreFabricationRepository $ordreFabricationRepository,
-        private TypeEtapeRepository $typeEtapeRepository,
-        private OrdreFabricationNumeroGenerator $numeroGenerator,
-    ) {
-    }
+    public function __construct(private EntityManagerInterface $entityManager,  private OrdreFabricationRepository $ordreFabricationRepository,  private TypeEtapeRepository $typeEtapeRepository, private OrdreFabricationNumeroGenerator $numeroGenerator,) {}
 
     #[Route('', name: 'app_ordre_fabrication', methods: ['GET'])]
     public function index(): Response
@@ -75,15 +69,9 @@ class OrdreFabricationController extends AbstractController
             $this->entityManager->persist($ordre);
             $this->entityManager->flush();
 
-            $this->addFlash(
-                'success',
-                'Ordre de fabrication créé. Vous devez maintenant définir ses étapes.'
-            );
+            $this->addFlash('success', 'Ordre de fabrication créé. Vous devez maintenant définir ses étapes.');
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_configurer_etapes',
-                ['id' => $ordre->getId()]
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes', ['id' => $ordre->getId()]);
         }
 
         return $this->render('ordre_fabrication/new.html.twig', [
@@ -92,11 +80,7 @@ class OrdreFabricationController extends AbstractController
         ]);
     }
 
-    #[Route(
-        '/{id<\d+>}/edit',
-        name: 'app_ordre_fabrication_edit',
-        methods: ['GET', 'POST']
-    )]
+    #[Route('/{id<\d+>}/edit', name: 'app_ordre_fabrication_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, int $id): Response
     {
         $ordre = $this->ordreFabricationRepository->find($id);
@@ -111,10 +95,7 @@ class OrdreFabricationController extends AbstractController
             );
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted(OrdreFabricationVoter::EDIT, $ordre);
 
         $form = $this->createForm(OrdreFabricationType::class, $ordre);
         $form->handleRequest($request);
@@ -124,10 +105,7 @@ class OrdreFabricationController extends AbstractController
 
             $this->entityManager->flush();
 
-            $this->addFlash(
-                'success',
-                'Ordre de fabrication modifié avec succès.'
-            );
+            $this->addFlash('success', 'Ordre de fabrication modifié avec succès.');
 
             return $this->redirectToRoute('app_ordre_fabrication');
         }
@@ -144,11 +122,7 @@ class OrdreFabricationController extends AbstractController
      * ============================================================
      */
 
-    #[Route(
-        '/{id<\d+>}/etapes',
-        name: 'app_ordre_fabrication_configurer_etapes',
-        methods: ['GET']
-    )]
+    #[Route('/{id<\d+>}/etapes', name: 'app_ordre_fabrication_configurer_etapes',  methods: ['GET'])]
     public function configurerEtapes(int $id): Response
     {
         $ordre = $this->ordreFabricationRepository->find($id);
@@ -163,10 +137,7 @@ class OrdreFabricationController extends AbstractController
             );
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted(OrdreFabricationVoter::EDIT,  $ordre);
 
         $etapes = $this->getEtapesTriees($ordre);
 
@@ -184,36 +155,21 @@ class OrdreFabricationController extends AbstractController
         );
     }
 
-    #[Route(
-        '/{id<\d+>}/etapes/ajouter',
-        name: 'app_ordre_fabrication_etape_ajouter',
-        methods: ['POST']
-    )]
-    public function ajouterEtape(
-        Request $request,
-        int $id
-    ): Response {
+    #[Route('/{id<\d+>}/etapes/ajouter', name: 'app_ordre_fabrication_etape_ajouter', methods: ['POST'])]
+    public function ajouterEtape(Request $request,  int $id): Response
+    {
         $ordre = $this->ordreFabricationRepository->find($id);
 
         if (!$ordre) {
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted(OrdreFabricationVoter::EDIT, $ordre);
 
         if ($this->ordreEstCommence($ordre)) {
-            $this->addFlash(
-                'error',
-                'Impossible de modifier les étapes d’un OF déjà commencé.'
-            );
+            $this->addFlash('error', 'Impossible de modifier les étapes d’un OF déjà commencé.');
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_configurer_etapes',
-                ['id' => $id]
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes', ['id' => $id]);
         }
 
         if (!$this->isCsrfTokenValid(
@@ -233,40 +189,24 @@ class OrdreFabricationController extends AbstractController
                 'Veuillez sélectionner une étape.'
             );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_configurer_etapes',
-                ['id' => $id]
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes',  ['id' => $id]);
         }
 
         $typeEtape = $this->typeEtapeRepository->find($typeEtapeId);
 
         if (!$typeEtape instanceof TypeEtape) {
-            $this->addFlash(
-                'error',
-                'Le type d’étape sélectionné est invalide.'
-            );
+            $this->addFlash('error',  'Le type d’étape sélectionné est invalide.');
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_configurer_etapes',
-                ['id' => $id]
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes',   ['id' => $id]);
         }
 
         foreach ($ordre->getEtapeFabrications() as $etapeExistante) {
             if (
-                $etapeExistante->getTypeEtape()?->getId()
-                === $typeEtape->getId()
+                $etapeExistante->getTypeEtape()?->getId() === $typeEtape->getId()
             ) {
-                $this->addFlash(
-                    'error',
-                    'Cette étape existe déjà dans cet OF.'
-                );
+                $this->addFlash('error', 'Cette étape existe déjà dans cet OF.');
 
-                return $this->redirectToRoute(
-                    'app_ordre_fabrication_configurer_etapes',
-                    ['id' => $id]
-                );
+                return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes',  ['id' => $id]);
             }
         }
 
@@ -283,62 +223,35 @@ class OrdreFabricationController extends AbstractController
         $this->entityManager->persist($etape);
         $this->entityManager->flush();
 
-        $this->addFlash(
-            'success',
-            'Étape "' . $typeEtape->getNom() . '" ajoutée à l’OF.'
-        );
+        $this->addFlash('success', 'Étape "' . $typeEtape->getNom() . '" ajoutée à l’OF.');
 
-        return $this->redirectToRoute(
-            'app_ordre_fabrication_configurer_etapes',
-            ['id' => $id]
-        );
+        return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes',  ['id' => $id]);
     }
 
-    #[Route(
-        '/{id<\d+>}/etapes/{etapeId<\d+>}/supprimer',
-        name: 'app_ordre_fabrication_etape_supprimer',
-        methods: ['POST']
-    )]
-    public function supprimerEtape(
-        Request $request,
-        int $id,
-        int $etapeId
-    ): Response {
+    #[Route('/{id<\d+>}/etapes/{etapeId<\d+>}/supprimer', name: 'app_ordre_fabrication_etape_supprimer', methods: ['POST'])]
+    public function supprimerEtape(Request $request,int $id, int $etapeId): Response
+    {
         $ordre = $this->ordreFabricationRepository->find($id);
 
         if (!$ordre) {
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted( OrdreFabricationVoter::EDIT, $ordre );
 
         if ($this->ordreEstCommence($ordre)) {
-            $this->addFlash(
-                'error',
-                'Impossible de modifier les étapes d’un OF déjà commencé.'
-            );
+            $this->addFlash( 'error','Impossible de modifier les étapes d’un OF déjà commencé.' );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_configurer_etapes',
-                ['id' => $id]
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes', ['id' => $id] );
         }
 
-        if (!$this->isCsrfTokenValid(
-            'supprimer_etape_' . $etapeId,
-            $request->request->get('_token')
-        )) {
+        if (!$this->isCsrfTokenValid( 'supprimer_etape_' . $etapeId, $request->request->get('_token') )) {
             throw $this->createAccessDeniedException(
                 'Token CSRF invalide.'
             );
         }
 
-        $etape = $this->entityManager
-            ->getRepository(EtapeFabrication::class)
-            ->find($etapeId);
+        $etape = $this->entityManager ->getRepository(EtapeFabrication::class) ->find($etapeId);
 
         if (!$etape instanceof EtapeFabrication) {
             throw $this->createNotFoundException();
@@ -349,37 +262,26 @@ class OrdreFabricationController extends AbstractController
         }
 
         $this->entityManager->remove($etape);
-        $this->reordonnerEtapesApresSuppression(
-            $ordre,
-            $etape
-        );
+        $this->reordonnerEtapesApresSuppression(  $ordre,  $etape );
 
         $this->entityManager->flush();
 
         $this->addFlash('success', 'Étape supprimée.');
 
-        return $this->redirectToRoute(
-            'app_ordre_fabrication_configurer_etapes',
+        return $this->redirectToRoute( 'app_ordre_fabrication_configurer_etapes',
             ['id' => $id]
         );
     }
 
-    #[Route(
-        '/{id<\d+>}/etapes/{etapeId<\d+>}/monter',
-        name: 'app_ordre_fabrication_etape_monter',
-        methods: ['POST']
-    )]
-    public function monterEtape(
-        Request $request,
-        int $id,
-        int $etapeId
-    ): Response {
-        return $this->deplacerEtape(
-            $request,
-            $id,
-            $etapeId,
-            -1
-        );
+
+// Deplace la position des etapes de la fabrication
+// id =>  ordre de fabrication
+// etapeId => identifiant de l'etape a deplacer
+// monter => action
+
+    #[Route('/{id<\d+>}/etapes/{etapeId<\d+>}/monter', name: 'app_ordre_fabrication_etape_monter', methods: ['POST'] )]
+    public function monterEtape( Request $request, int $id, int $etapeId ): Response {
+        return $this->deplacerEtape( $request, $id, $etapeId, -1 );
     }
 
     #[Route(
@@ -400,47 +302,31 @@ class OrdreFabricationController extends AbstractController
         );
     }
 
-    private function deplacerEtape(
-        Request $request,
-        int $id,
-        int $etapeId,
-        int $direction
-    ): Response {
+    private function deplacerEtape(Request $request, int $id, int $etapeId, int $direction ): Response {
         $ordre = $this->ordreFabricationRepository->find($id);
 
         if (!$ordre) {
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted(OrdreFabricationVoter::EDIT, $ordre );
 
         if ($this->ordreEstCommence($ordre)) {
-            $this->addFlash(
+             $this->addFlash(
                 'error',
                 'Impossible de modifier l’ordre des étapes d’un OF déjà commencé.'
             );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_configurer_etapes',
-                ['id' => $id]
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes', ['id' => $id]  );
         }
 
-        if (!$this->isCsrfTokenValid(
-            'deplacer_etape_' . $etapeId,
-            $request->request->get('_token')
-        )) {
+        if (!$this->isCsrfTokenValid('deplacer_etape_' . $etapeId, $request->request->get('_token') )) {
             throw $this->createAccessDeniedException(
                 'Token CSRF invalide.'
             );
         }
 
-        $etape = $this->entityManager
-            ->getRepository(EtapeFabrication::class)
-            ->find($etapeId);
+        $etape = $this->entityManager->getRepository(EtapeFabrication::class)->find($etapeId);
 
         if (!$etape instanceof EtapeFabrication) {
             throw $this->createNotFoundException();
@@ -480,8 +366,7 @@ class OrdreFabricationController extends AbstractController
 
         $this->entityManager->flush();
 
-        return $this->redirectToRoute(
-            'app_ordre_fabrication_configurer_etapes',
+        return $this->redirectToRoute('app_ordre_fabrication_configurer_etapes',
             ['id' => $id]
         );
     }
@@ -648,15 +533,8 @@ class OrdreFabricationController extends AbstractController
      * ============================================================
      */
 
-    #[Route(
-        '/{id<\d+>}/kanban/statut',
-        name: 'app_ordre_fabrication_kanban_statut',
-        methods: ['POST']
-    )]
-    public function changerStatutKanban(
-        Request $request,
-        int $id
-    ): JsonResponse {
+    #[Route(   '/{id<\d+>}/kanban/statut',   name: 'app_ordre_fabrication_kanban_statut',    methods: ['POST']  )]
+    public function changerStatutKanban(  Request $request,  int $id ): JsonResponse {
         $ordre = $this->ordreFabricationRepository->find($id);
 
         if (!$ordre) {
@@ -789,23 +667,14 @@ class OrdreFabricationController extends AbstractController
             }
 
             $ordre->setStatut('TERMINE');
-            $ordre->setDateFin(
-                $ordre->getDateFin()
-                ?? new \DateTimeImmutable()
-            );
+            $ordre->setDateFin(  $ordre->getDateFin() ?? new \DateTimeImmutable() );
 
             $this->entityManager->flush();
 
-            return new JsonResponse([
-                'success' => true,
-                'statut' => 'TERMINE',
-            ]);
+            return new JsonResponse([ 'success' => true,   'statut' => 'TERMINE',   ]);
         }
 
-        return new JsonResponse([
-            'success' => false,
-            'message' => 'Action impossible.',
-        ], Response::HTTP_BAD_REQUEST);
+        return new JsonResponse([ 'success' => false,  'message' => 'Action impossible.', ], Response::HTTP_BAD_REQUEST);
     }
 
     /*
@@ -814,55 +683,30 @@ class OrdreFabricationController extends AbstractController
      * ============================================================
      */
 
-    #[Route(
-        '/{id<\d+>}/supprimer',
-        name: 'app_ordre_fabrication_supprimer',
-        methods: ['POST']
-    )]
-    public function supprimer(
-        Request $request,
-        int $id
-    ): Response {
+    #[Route( '/{id<\d+>}/supprimer', name: 'app_ordre_fabrication_supprimer',    methods: ['POST']   )]
+    public function supprimer(   Request $request, int $id  ): Response {
         $ordre = $this->ordreFabricationRepository->find($id);
 
         if (!$ordre) {
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted( OrdreFabricationVoter::EDIT,  $ordre );
 
-        if (!$this->isCsrfTokenValid(
-            'supprimer_' . $id,
-            $request->request->get('_token')
-        )) {
-            throw $this->createAccessDeniedException(
-                'Token CSRF invalide.'
-            );
+        if (!$this->isCsrfTokenValid('supprimer_' . $id, $request->request->get('_token') )) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.' );
         }
 
         if ($ordre->getDateArchivage() !== null) {
-            $this->addFlash(
-                'error',
-                'Un OF archivé ne peut pas être supprimé.'
-            );
+            $this->addFlash( 'error', 'Un OF archivé ne peut pas être supprimé.'  );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication'
-            );
+            return $this->redirectToRoute('app_ordre_fabrication' );
         }
 
-        if ($ordre->getStatut() !== 'EN_ATTENTE') {
-            $this->addFlash(
-                'error',
-                'Seul un OF en attente peut être supprimé.'
-            );
+        if ($ordre->getStatut() !== 'EN_ATTENTE') {       
+             $this->addFlash( 'error', 'Seul un OF en attente peut être supprimé.' );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication'
-            );
+            return $this->redirectToRoute( 'app_ordre_fabrication');
         }
 
         $numero = $ordre->getNumero();
@@ -870,14 +714,9 @@ class OrdreFabricationController extends AbstractController
         $this->entityManager->remove($ordre);
         $this->entityManager->flush();
 
-        $this->addFlash(
-            'success',
-            'L’ordre de fabrication ' . $numero . ' a été supprimé.'
-        );
+        $this->addFlash( 'success','L’ordre de fabrication ' . $numero . ' a été supprimé.'  );
 
-        return $this->redirectToRoute(
-            'app_ordre_fabrication'
-        );
+        return $this->redirectToRoute(  'app_ordre_fabrication' );
     }
 
     /*
@@ -886,81 +725,47 @@ class OrdreFabricationController extends AbstractController
      * ============================================================
      */
 
-    #[Route(
-        '/{id<\d+>}/archiver',
-        name: 'app_ordre_fabrication_archiver',
-        methods: ['POST']
-    )]
-    public function archiver(
-        Request $request,
-        int $id
-    ): Response {
+    #[Route( '/{id<\d+>}/archiver',name: 'app_ordre_fabrication_archiver',  methods: ['POST']  )]
+    public function archiver( Request $request,   int $id  ): Response {
         $ordre = $this->ordreFabricationRepository->find($id);
 
         if (!$ordre) {
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(
-            OrdreFabricationVoter::EDIT,
-            $ordre
-        );
+        $this->denyAccessUnlessGranted(OrdreFabricationVoter::EDIT,  $ordre  );
 
-        if (!$this->isCsrfTokenValid(
-            'archiver_' . $id,
-            $request->request->get('_token')
-        )) {
+        if (!$this->isCsrfTokenValid('archiver_' . $id,  $request->request->get('_token')  )) {
             throw $this->createAccessDeniedException(
                 'Token CSRF invalide.'
             );
         }
 
         if ($ordre->getDateArchivage() !== null) {
-            $this->addFlash(
-                'error',
-                'Cet OF est déjà archivé.'
-            );
+            $this->addFlash('error', 'Cet OF est déjà archivé.'  );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication_archives'
-            );
+            return $this->redirectToRoute('app_ordre_fabrication_archives' );
         }
 
         if ($ordre->getStatut() !== 'TERMINE') {
-            $this->addFlash(
-                'error',
-                'Seul un OF terminé peut être archivé.'
-            );
+            $this->addFlash( 'error', 'Seul un OF terminé peut être archivé.'  );
 
-            return $this->redirectToRoute(
-                'app_ordre_fabrication'
-            );
+            return $this->redirectToRoute( 'app_ordre_fabrication' );
         }
 
         foreach ($this->getEtapesTriees($ordre) as $etape) {
             if ($etape->getStatut() !== 'TERMINEE') {
-                $this->addFlash(
-                    'error',
-                    'Toutes les étapes doivent être terminées avant archivage.'
-                );
+                $this->addFlash( 'error',  'Toutes les étapes doivent être terminées avant archivage.' );
 
-                return $this->redirectToRoute(
-                    'app_ordre_fabrication'
-                );
+                return $this->redirectToRoute( 'app_ordre_fabrication' );
             }
         }
 
-        $ordre->setDateArchivage(
-            new \DateTimeImmutable()
-        );
+        $ordre->setDateArchivage( new \DateTimeImmutable() );
 
         $this->entityManager->flush();
 
-        $this->addFlash(
-            'success',
-            'L’ordre de fabrication ' . $ordre->getNumero()
-            . ' a été archivé.'
-        );
+        $this->addFlash('success','L’ordre de fabrication ' . $ordre->getNumero() . ' a été archivé.' );
 
         return $this->redirectToRoute(
             'app_ordre_fabrication'
@@ -973,28 +778,15 @@ class OrdreFabricationController extends AbstractController
      * ============================================================
      */
 
-    private function getEtapesTriees(
-        OrdreFabrication $ordre
-    ): array {
+    private function getEtapesTriees( OrdreFabrication $ordre ): array {
         $etapes = $ordre->getEtapeFabrications()->toArray();
 
-        usort(
-            $etapes,
-            fn (
-                EtapeFabrication $a,
-                EtapeFabrication $b
-            ) =>
-                ($a->getOrdre() ?? 0)
-                <=>
-                ($b->getOrdre() ?? 0)
-        );
+        usort($etapes,fn( EtapeFabrication $a, EtapeFabrication $b ) => ($a->getOrdre() ?? 0) <=> ($b->getOrdre() ?? 0) );
 
         return $etapes;
     }
 
-    private function ordreEstCommence(
-        OrdreFabrication $ordre
-    ): bool {
+    private function ordreEstCommence( OrdreFabrication $ordre): bool {
         foreach ($this->getEtapesTriees($ordre) as $etape) {
             if ($etape->getStatut() !== 'A_FAIRE') {
                 return true;
@@ -1004,9 +796,7 @@ class OrdreFabricationController extends AbstractController
         return false;
     }
 
-    private function prochainOrdre(
-        OrdreFabrication $ordre
-    ): int {
+    private function prochainOrdre(OrdreFabrication $ordre ): int {
         $etapes = $this->getEtapesTriees($ordre);
 
         if (count($etapes) === 0) {
@@ -1018,16 +808,8 @@ class OrdreFabricationController extends AbstractController
         return ($dernier->getOrdre() ?? 0) + 1;
     }
 
-    private function reordonnerEtapesApresSuppression(
-        OrdreFabrication $ordre,
-        EtapeFabrication $etapeSupprimee
-    ): void {
-        $etapes = array_filter(
-            $this->getEtapesTriees($ordre),
-            fn (
-                EtapeFabrication $etape
-            ) => $etape !== $etapeSupprimee
-        );
+    private function reordonnerEtapesApresSuppression( OrdreFabrication $ordre, EtapeFabrication $etapeSupprimee): void {
+        $etapes = array_filter( $this->getEtapesTriees($ordre), fn( EtapeFabrication $etape) => $etape !== $etapeSupprimee );
 
         $position = 1;
 
@@ -1037,9 +819,7 @@ class OrdreFabricationController extends AbstractController
         }
     }
 
-    private function recalculerStatutOrdre(
-        OrdreFabrication $ordre
-    ): void {
+    private function recalculerStatutOrdre( OrdreFabrication $ordre ): void {
         $etapes = $this->getEtapesTriees($ordre);
 
         if (count($etapes) === 0) {
@@ -1067,17 +847,12 @@ class OrdreFabricationController extends AbstractController
 
         if ($toutesTerminees) {
             $ordre->setStatut('TERMINE');
-            $ordre->setDateFin(
-                $ordre->getDateFin()
-                ?? new \DateTimeImmutable()
-            );
+            $ordre->setDateFin( $ordre->getDateFin() ?? new \DateTimeImmutable() );
 
             return;
         }
 
-        if (
-            $auMoinsUneEnCours
-            || $auMoinsUneTerminee
+        if (  $auMoinsUneEnCours || $auMoinsUneTerminee
         ) {
             $ordre->setStatut('EN_COURS');
             return;
