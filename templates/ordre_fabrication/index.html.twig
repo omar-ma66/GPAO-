@@ -737,8 +737,8 @@
                                             >
                                                 {{ etape.nom }}
                                             </span>
-
-                                            {% if is_granted('EDIT', ordre) %}
+{# on fait un appel au voter pour l'action EDIT sur l'entite ordre #}
+                                            {% if is_granted('EDIT', ordre) %} 
 
                                                 <form
                                                     method="post"
